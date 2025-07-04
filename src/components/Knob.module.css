@@ -1,0 +1,109 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  user-select: none;
+}
+
+.container.dragging,
+.container.dragging * {
+  cursor: ns-resize !important;
+}
+
+.knob {
+  position: relative;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3d3d3d, #1a1a1a);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.8);
+  cursor: ns-resize;
+  margin-bottom: 4px;
+  transition: all 0.02s linear;
+  user-select: none;
+}
+
+.knob:hover {
+  background: linear-gradient(135deg, #444444, #222222);
+  transform: scale(1.02);
+}
+
+/* Focus style for accessibility */
+.knob:focus,
+.knob.focused {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.6), 0 3px 5px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.8);
+}
+
+.active {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.9);
+  background: linear-gradient(135deg, #505050, #252525);
+}
+
+.indicator {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  width: 4px;
+  height: 25%;
+  background-color: #fff;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+.textInput {
+  text-align: center;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 8px;
+  background-color: transparent;
+  color: #ccc;
+  transition: all 0.5s ease;
+}
+
+.textInput:focus {
+  outline: none;
+  border: 1px solid #0066cc;
+  background-color: #f5f5f5;
+  color: #333;
+  box-shadow: 0 0 4px rgba(0, 102, 204, 0.4);
+}
+
+.label {
+  margin-bottom: 4px;
+  font-size: 8px;
+  color: #ccc;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Screen reader only class */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Container focus state */
+.container.focused {
+  outline: none;
+}
+
+/* Global style */
+:global(body[style*="cursor: ns-resize"] *) {
+  cursor: ns-resize !important;
+}

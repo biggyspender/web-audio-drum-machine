@@ -1,0 +1,112 @@
+/* StepSequencer - Single grid layout container with vintage plastic patina */
+.sequencer {
+  display: grid;
+  /* Define grid: first column for labels, then 16 columns for steps */
+  grid-template-columns: min-content repeat(16, min-content);
+  gap: 4px;
+  padding: 20px;
+  /* Dark vintage plastic background with patina */
+  background: linear-gradient(
+    135deg,
+    rgba(45, 45, 45, 0.95) 0%,
+    /* Dark grey top */ rgba(40, 40, 38, 0.97) 15%,
+    /* Slightly warmer dark grey */ rgba(35, 35, 33, 0.98) 35%,
+    /* More patina/aging */ rgba(32, 34, 38, 0.97) 65%,
+    /* Cool blue-grey tinge */ rgba(28, 30, 35, 0.95) 85%,
+    /* Deeper cool grey */ rgba(25, 26, 30, 0.92) 100% /* Bottom shadow tones */
+  );
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  margin-bottom: 20px;
+  /* Plastic depth and shine effects */
+  box-shadow: inset 2px 2px 6px rgba(255, 255, 255, 0.15),
+    /* Toned down top highlight for plastic shine */ inset -2px -2px 6px
+      rgba(0, 0, 0, 0.15),
+    /* Bottom shadow for depth */ inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    /* Subtle inner border for plastic edge */ 0 2px 4px rgba(0, 0, 0, 0.1),
+    /* Subtle drop shadow */ 0 4px 8px rgba(0, 0, 0, 0.05); /* Softer outer shadow for elevation */
+}
+
+/* Remove the separate header and trackRow grid definitions since we're using a single grid */
+.header {
+  /* Header items will be positioned using grid-column and grid-row */
+  display: contents;
+}
+
+.trackRow {
+  /* Track row items will be positioned using grid-column and grid-row */
+  display: contents;
+}
+
+.trackLabel {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ccc;
+  text-transform: uppercase;
+  text-align: right;
+  padding-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.stepHeader {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  /* Clear plastic number effect with incandescent coloring */
+  color: rgba(255, 220, 150, calc(0.3 + var(--playhead-intensity, 0) * 0.7));
+
+  /* Backlit glow effect when playhead is active */
+  transition: color 0.2s ease-out;
+}
+
+/* Incandescent glow effect using pseudo-element */
+.stepHeader::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 245, 200, calc(var(--playhead-intensity, 0) * 0.1)) 0%,
+    rgba(255, 220, 150, calc(var(--playhead-intensity, 0) * 0.06)) 60%,
+    transparent 100%
+  );
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: 1;
+  transition: all 0.2s ease-out;
+  box-shadow: 0 0 4px
+    rgba(255, 245, 200, calc(var(--playhead-intensity, 0) * 0.06));
+}
+
+/* Enhanced glow when playhead is active */
+/* Highlight every 4th step for musical visualization */
+.stepHeader:nth-child(4n + 2) {
+  font-weight: bold;
+  /* Slightly brighter base color for quarter note positions */
+  color: rgba(255, 220, 150, calc(0.6 + var(--playhead-intensity, 0) * 0.4));
+}
+
+.stepHeader:nth-child(4n + 2)::before {
+  /* Subtle base glow for quarter note positions when not activated */
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 245, 200, calc(0.03 + var(--playhead-intensity, 0) * 0.1)) 0%,
+    rgba(255, 220, 150, calc(0.02 + var(--playhead-intensity, 0) * 0.06)) 60%,
+    transparent 100%
+  );
+  box-shadow: 0 0 4px
+    rgba(255, 245, 200, calc(0.02 + var(--playhead-intensity, 0) * 0.06));
+}

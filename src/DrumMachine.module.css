@@ -1,0 +1,98 @@
+.appContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f5f5f7;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  background-color: #e6d8c5;
+}
+
+.title {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.controlsContainer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  width: 100%;
+  align-items: flex-end;
+  position: relative;
+  padding: 10px 20px;
+  /* Dark vintage plastic background with patina */
+  background: linear-gradient(
+    135deg,
+    rgba(45, 45, 45, 0.95) 0%,
+    /* Dark grey top */ rgba(40, 40, 38, 0.97) 15%,
+    /* Slightly warmer dark grey */ rgba(35, 35, 33, 0.98) 35%,
+    /* More patina/aging */ rgba(32, 34, 38, 0.97) 65%,
+    /* Cool blue-grey tinge */ rgba(28, 30, 35, 0.95) 85%,
+    /* Deeper cool grey */ rgba(25, 26, 30, 0.92) 100% /* Bottom shadow tones */
+  );
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  /* Plastic depth and shine effects */
+  box-shadow: inset 2px 2px 6px rgba(255, 255, 255, 0.15),
+    /* Toned down top highlight for plastic shine */ inset -2px -2px 6px
+      rgba(0, 0, 0, 0.15),
+    /* Bottom shadow for depth */ inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    /* Subtle inner border for plastic edge */ 0 2px 4px rgba(0, 0, 0, 0.1),
+    /* Subtle drop shadow */ 0 4px 8px rgba(0, 0, 0, 0.05); /* Softer outer shadow for elevation */
+}
+
+.knobsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 40px;
+}
+
+.buttonsContainer {
+  height:100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buttonContainer {
+  display: grid;
+  place-items: center;
+  height: 42px;
+}
+
+.playButton {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease, font-size 0.1s ease, padding 0.1s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  &:hover {
+    background-color: #0055aa;
+  }
+  &.active {
+    font-size: 9px;
+    padding: 6px 12px;
+    background-color: #cc0000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    &:hover {
+      background-color: #900000;
+    }
+  }
+}
+
+/* When the sequence is playing, style the button differently */
+.playButton:has(+ :checked) {
+  background-color: #cc0000;
+}

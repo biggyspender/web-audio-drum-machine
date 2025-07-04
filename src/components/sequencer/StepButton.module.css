@@ -1,0 +1,167 @@
+/* StepButton - Vintage drum machine aesthetic with backlight support */
+.stepButton {
+  /* Timing variables for consistent transitions */
+  /* Controls the main backlight effect (inner glow and surface illumination) */
+  --backlight-transition-duration: 0.2s;
+  /* Controls the outer glow effect (slightly slower for depth) */
+  --backlight-glow-transition-duration: 0.3s;
+  /* Easing function for authentic incandescent bulb feel */
+  --backlight-transition-easing: ease-out;
+  /* Maximum intensity for backlight effect (0-1, where 1 would be full opacity) */
+  /* Set to 0.7 to make full intensity less overwhelming while maintaining visibility */
+  --backlight-max-intensity: 0.8;
+  /* Active state for smooth transitions (0 = inactive, 1 = active) */
+  --active-state: 0;
+
+  /* 3:2 aspect ratio for mobile touch targets */
+  width: 22px;
+  height: 32px;
+  border: 2px solid #2a2a2a;
+  border-radius: 4px;
+  /* Translucent aged plastic with 80s patina */
+  background: linear-gradient(145deg, 
+    rgba(245, 245, 240, 0.85) 0%,    /* Aged off-white top */
+    rgba(235, 235, 225, 0.9) 25%,    /* Slightly more yellowed */
+    rgba(225, 225, 215, 0.92) 50%,   /* More patina in middle */
+    rgba(215, 220, 225, 0.9) 75%,    /* Blue-grey tinge */
+    rgba(200, 205, 215, 0.85) 100%   /* Deeper blue-grey bottom */
+  );
+  /* Add subtle inner border for plastic depth */
+  box-shadow: 
+    inset 1px 1px 3px rgba(255, 255, 255, 0.4),     /* Top highlight for plastic shine */
+    inset -1px -1px 3px rgba(0, 0, 0, 0.15),        /* Bottom shadow for depth */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),       /* Inner border for plastic edge */
+    0 1px 2px rgba(0, 0, 0, 0.1),                   /* Subtle drop shadow */
+    /* Active state color overlay - interpolates from transparent to orange */
+    inset 0 0 100px 0 rgba(245, 140, 85, calc(var(--active-state) * 0.85)),
+    inset 1px 1px 3px rgba(255, 200, 150, calc(var(--active-state) * 0.4)),
+    inset -1px -1px 3px rgba(150, 50, 25, calc(var(--active-state) * 0.2)),
+    inset 0 0 0 1px rgba(255, 180, 120, calc(var(--active-state) * 0.3)),
+    0 0 6px rgba(215, 110, 65, calc(var(--active-state) * 0.3)),
+    /* Backlight outer glow effects */
+    0 0 calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * 20px)
+      rgba(255, 200, 100, calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * (0.3 + var(--active-state) * 0.1))),
+    0 0 calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * 40px)
+      rgba(255, 160, 80, calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * (0.1 + var(--active-state) * 0.1)));
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  /* Slow transitions for authentic incandescent bulb feel */
+  transition: border-color var(--backlight-transition-duration) var(--backlight-transition-easing),
+              transform var(--backlight-transition-duration) var(--backlight-transition-easing),
+              box-shadow var(--backlight-transition-duration) var(--backlight-transition-easing),
+              --active-state var(--backlight-transition-duration) var(--backlight-transition-easing);
+
+  /* Remove default button styling */
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+
+/* Backlight effect - incandescent bulb through translucent plastic */
+/* Uses opacity + scale transitions for smooth animation (gradients can't be directly transitioned) */
+.stepButton::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  /* Combines centering with scale effect: starts at 80% and grows to 100% */
+  transform: translate(-50%, -50%) scale(calc(0.8 + var(--backlight-intensity, 0) * 0.2));
+  border-radius: 50%;
+  /* Fixed gradient - only opacity transitions for smooth effect */
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 220, 120, 0.8) 0%,
+    rgba(255, 180, 80, 0.6) 30%,
+    rgba(255, 140, 60, 0.3) 60%,
+    transparent 80%
+  );
+  opacity: calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity));
+  pointer-events: none;
+  transition: opacity var(--backlight-transition-duration) var(--backlight-transition-easing),
+              transform var(--backlight-transition-duration) var(--backlight-transition-easing);
+  z-index: 1;
+}
+
+/* Outer glow effect for backlight */
+/* Larger scale range for more dramatic outer glow expansion */
+.stepButton::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  /* More dramatic scale effect: starts at 70% and grows to 100% */
+  transform: translate(-50%, -50%) scale(calc(0.7 + var(--backlight-intensity, 0) * 0.3));
+  border-radius: 50%;
+  /* Fixed gradient with blur for realistic light bleed */
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 200, 100, 0.4) 0%,
+    rgba(255, 160, 80, 0.2) 40%,
+    transparent 70%
+  );
+  opacity: calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity));
+  filter: blur(3px);
+  pointer-events: none;
+  /* Slightly slower transition for layered depth effect */
+  transition: opacity var(--backlight-glow-transition-duration) var(--backlight-transition-easing),
+              transform var(--backlight-glow-transition-duration) var(--backlight-transition-easing);
+  z-index: 0;
+}
+
+.stepButton:hover {
+  /* Slightly clearer plastic on hover */
+  background: linear-gradient(145deg, 
+    rgba(250, 250, 245, 0.9) 0%,     /* Brighter aged white */
+    rgba(240, 240, 230, 0.92) 25%,   
+    rgba(230, 230, 220, 0.94) 50%,   
+    rgba(220, 225, 230, 0.92) 75%,   
+    rgba(205, 210, 220, 0.9) 100%    
+  );
+  border-color: #333;
+  /* Preserve active state styling in hover by including all box-shadow layers */
+  box-shadow: 
+    inset 1px 1px 4px rgba(255, 255, 255, 0.5),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    /* Active state color overlay - preserved on hover */
+    inset 0 0 100px 0 rgba(245, 140, 85, calc(var(--active-state) * 0.85)),
+    inset 1px 1px 3px rgba(255, 200, 150, calc(var(--active-state) * 0.4)),
+    inset -1px -1px 3px rgba(150, 50, 25, calc(var(--active-state) * 0.2)),
+    inset 0 0 0 1px rgba(255, 180, 120, calc(var(--active-state) * 0.3)),
+    0 0 6px rgba(215, 110, 65, calc(var(--active-state) * 0.3)),
+    /* Backlight outer glow effects */
+    0 0 calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * 20px)
+      rgba(255, 200, 100, calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * (0.3 + var(--active-state) * 0.1))),
+    0 0 calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * 40px)
+      rgba(255, 160, 80, calc(var(--backlight-intensity, 0) * var(--backlight-max-intensity) * (0.1 + var(--active-state) * 0.1)));
+}
+
+.stepButton:active {
+  transform: translateY(1px);
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.4),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.stepButton.active {
+  /* Set active state for smooth transition */
+  --active-state: 1;
+  border-color: #2a2a2a;
+}
+
+.stepButton.active:hover {
+  /* Enhanced hover state for active button - just keep border consistent */
+  border-color: #2a2a2a;
+}
+
+/* Focus styles for accessibility */
+.stepButton:focus-visible {
+  outline: 2px solid #ff6b35;
+  outline-offset: 2px;
+}
