@@ -1,5 +1,7 @@
 # 🥁 Drum Machine (Web Audio API Experiment)
 
+[🚀 **Live Demo**](https://biggyspender.github.io/web-audio-drum-machine/)
+
 This project is an experimental drum machine and step sequencer built with React and TypeScript, designed to explore the capabilities of the Web Audio API's `AudioContext` for real-time audio synthesis, sequencing, and effects in the browser.
 
 ## ✨ Features
