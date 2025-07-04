@@ -1,5 +1,5 @@
 {
-  "name": "drum-machine",
+  "name": "web-audio-drum-machine",
   "private": true,
   "version": "0.0.0",
   "type": "module",

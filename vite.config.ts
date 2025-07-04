@@ -18,6 +18,7 @@ const localServerConfig = {
 };
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/web-audio-drum-machine/",
   build: {
     rollupOptions: {
       treeshake: true,
