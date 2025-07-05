@@ -44,7 +44,6 @@ export const Knob: React.FC<KnobProps> = ({
   isDraggingRef.current = isDragging;
 
   const [textValue, setTextValue] = useState(value.toFixed(precision));
-  const [isFocused, setIsFocused] = useState(false);
   const isEscapingRef = useRef(false);
   const knobRef = useRef<HTMLDivElement>(null);
   const lastYRef = useRef<number | null>(null);
@@ -176,97 +175,45 @@ export const Knob: React.FC<KnobProps> = ({
     [adjustValue, onChange, min, max]
   );
 
-  // Define handlers using useCallbacks with proper dependencies
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+  // Pointer event handlers
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
       if (!isDraggingRef.current || lastYRef.current === null) return;
+      e.preventDefault();
       processMovement(e.clientY, e.ctrlKey);
     },
     [processMovement]
   );
 
-  // Touch move handler
-  const handleTouchMove = useCallback(
-    (e: TouchEvent) => {
-      if (!isDraggingRef.current || lastYRef.current === null) return;
-      e.preventDefault(); // Prevent scrolling when adjusting the knob
-      const touch = e.touches[0];
-      processMovement(touch.clientY);
-    },
-    [processMovement]
-  );
-
-  const handleEnd = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     setIsDragging(false);
     lastYRef.current = null;
-    // Reset accumulated delta when dragging ends
     accumulatedDeltaRef.current = 0;
   }, []);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
     lastYRef.current = e.clientY;
-
-    // Focus the knob element when interacted with
     if (knobRef.current) {
       knobRef.current.focus();
     }
   }, []);
 
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      setIsDragging(true);
-      lastYRef.current = e.touches[0].clientY;
-
-      // Focus the knob element when interacted with
-      if (knobRef.current) {
-        knobRef.current.focus();
-      }
-    },
-    []
-  );
-
-  const handleFocus = useCallback(() => {
-    setIsFocused(true);
-  }, []);
-
-  const handleBlur = useCallback(() => {
-    setIsFocused(false);
-  }, []);
-
   useEffect(() => {
-    // Native handler to prevent default touchstart when dragging
-    const handleNativeTouchStart = (e: TouchEvent) => {
-      if (isDraggingRef.current) {
-        e.preventDefault();
-      }
-    };
     if (isDragging) {
-      // Add event listeners for mouse and touch events
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleEnd);
-      window.addEventListener("touchmove", handleTouchMove, { passive: false });
-      window.addEventListener("touchend", handleEnd);
-      window.addEventListener("touchcancel", handleEnd);
-      window.addEventListener("touchstart", handleNativeTouchStart, { passive: false });
+      window.addEventListener("pointermove", handlePointerMove, { passive: false });
+      window.addEventListener("pointerup", handlePointerUp);
       document.body.style.cursor = "ns-resize";
       document.body.style.userSelect = "none";
-
       return () => {
-        // Cleanup event listeners when dragging ends
-        window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mouseup", handleEnd);
-        window.removeEventListener("touchmove", handleTouchMove);
-        window.removeEventListener("touchend", handleEnd);
-        window.removeEventListener("touchcancel", handleEnd);
-        window.removeEventListener("touchstart", handleNativeTouchStart);
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
       };
     }
-  }, [isDragging, handleMouseMove, handleTouchMove, handleEnd]);
+  }, [isDragging, handlePointerMove, handlePointerUp]);
 
   // Cleanup event listeners if component unmounts while dragging
   useEffect(() => {
@@ -276,13 +223,10 @@ export const Knob: React.FC<KnobProps> = ({
       document.body.style.userSelect = "";
 
       // Remove event listeners
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleEnd);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleEnd);
-      window.removeEventListener("touchcancel", handleEnd);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [handleMouseMove, handleTouchMove, handleEnd]);
+  }, [handlePointerMove, handlePointerUp]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTextValue(e.target.value);
@@ -368,19 +312,14 @@ export const Knob: React.FC<KnobProps> = ({
         aria-valuetext={getValueText()}
         aria-labelledby={labelId.current}
         aria-describedby={ariaDescribedBy || valueTextId.current}
-        className={`${styles.knob} ${isDragging ? styles.active : ""} ${
-          isFocused ? styles.focused : ""
-        }`}
+        className={`${styles.knob} ${isDragging ? styles.active : ""}`}
         style={{
           width: size,
           height: size,
           transform: `rotate(${degrees}deg)`,
         }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+        onPointerDown={handlePointerDown}
         onKeyDown={handleKeyDown}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
       >
         <div className={styles.indicator} />
         <span
