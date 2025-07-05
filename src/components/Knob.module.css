@@ -32,12 +32,9 @@
 }
 
 /* Focus style for accessibility */
-.knob:focus,
-.knob.focused {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.6), 0 3px 5px rgba(0, 0, 0, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.2),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.8);
+.knob:focus-visible {
+  outline: 2px solid #ff6b35;
+  outline-offset: 2px;
 }
 
 .active {
