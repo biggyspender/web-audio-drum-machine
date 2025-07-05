@@ -206,11 +206,13 @@ export const Knob: React.FC<KnobProps> = ({
       window.addEventListener("pointerup", handlePointerUp);
       document.body.style.cursor = "ns-resize";
       document.body.style.userSelect = "none";
+      document.body.style.touchAction = "none";
       return () => {
         window.removeEventListener("pointermove", handlePointerMove);
         window.removeEventListener("pointerup", handlePointerUp);
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
+        document.body.style.touchAction = "";
       };
     }
   }, [isDragging, handlePointerMove, handlePointerUp]);
