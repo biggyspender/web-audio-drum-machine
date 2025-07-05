@@ -12,6 +12,7 @@ import { createDefaultGridPattern } from "./components/sequencer/utils/createDef
 import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
 import { STEP_COUNT } from "./components/sequencer/types";
+import { useMediaQuery } from "./components/useMediaQuery";
 import styles from "./DrumMachine.module.css";
 
 const sampleMapPromise = fetchSampleMap(defaultSamples);
@@ -215,6 +216,9 @@ export function DrumMachine() {
   // Handle spacebar key press for toggling playback
   useKeyHandler(keyHandler);
 
+  // Responsive layout mode detection
+  const isVertical = useMediaQuery("(max-width: 650px)");
+
   const buildId = import.meta.env.VITE_BUILD_ID;
 
   return (
@@ -224,7 +228,8 @@ export function DrumMachine() {
         sampleMap={sampleMap}
         gridState={gridState}
         onStepToggle={handleStepToggle}
-        playheadPosition={playheadPosition >= 0 ? playheadPosition : undefined}
+        playheadPosition={playheadPosition}
+        vertical={isVertical}
       />
 
       <div className={styles.controlsContainer}>

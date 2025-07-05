@@ -4,7 +4,7 @@
   /* Define grid: first column for labels, then 16 columns for steps */
   grid-template-columns: min-content repeat(16, min-content);
   gap: 4px;
-  padding: 20px;
+  padding: 10px;
   /* Dark vintage plastic background with patina */
   background: linear-gradient(
     135deg,
@@ -108,4 +108,34 @@
   );
   box-shadow: 0 0 4px
     rgba(255, 245, 200, calc(0.02 + var(--playhead-intensity, 0) * 0.06));
+}
+
+/* Responsive grid: horizontal (default) */
+.sequencer {
+  grid-template-columns: min-content repeat(16, 1fr);
+  grid-auto-rows: 1fr;
+  /* Prevent horizontal scroll */
+  overflow-x: auto;
+}
+
+/* Responsive grid: vertical mode */
+.sequencer[data-vertical] {
+  grid-template-columns: min-content repeat(var(--track-count, 4), 1fr);
+  grid-auto-rows: 1fr;
+}
+
+@media (max-width: 650px) {
+  .sequencer {
+    /* Use vertical mode styles if data-vertical is present */
+    /* No horizontal scroll, grid adapts to width */
+    max-width: 100vw;
+    width: 100%;
+  }
+}
+
+.cornerCell {
+  /* Empty cell for grid alignment in vertical mode */
+  background: transparent;
+  width: 100%;
+  height: 100%;
 }
