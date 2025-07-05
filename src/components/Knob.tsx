@@ -237,6 +237,12 @@ export const Knob: React.FC<KnobProps> = ({
   }, []);
 
   useEffect(() => {
+    // Native handler to prevent default touchstart when dragging
+    const handleNativeTouchStart = (e: TouchEvent) => {
+      if (isDraggingRef.current) {
+        e.preventDefault();
+      }
+    };
     if (isDragging) {
       // Add event listeners for mouse and touch events
       window.addEventListener("mousemove", handleMouseMove);
@@ -244,6 +250,7 @@ export const Knob: React.FC<KnobProps> = ({
       window.addEventListener("touchmove", handleTouchMove, { passive: false });
       window.addEventListener("touchend", handleEnd);
       window.addEventListener("touchcancel", handleEnd);
+      window.addEventListener("touchstart", handleNativeTouchStart, { passive: false });
       document.body.style.cursor = "ns-resize";
       document.body.style.userSelect = "none";
 
@@ -254,6 +261,7 @@ export const Knob: React.FC<KnobProps> = ({
         window.removeEventListener("touchmove", handleTouchMove);
         window.removeEventListener("touchend", handleEnd);
         window.removeEventListener("touchcancel", handleEnd);
+        window.removeEventListener("touchstart", handleNativeTouchStart);
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
       };

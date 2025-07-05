@@ -23,6 +23,7 @@
   margin-bottom: 4px;
   transition: all 0.02s linear;
   user-select: none;
+  touch-action: none;
 }
 
 .knob:hover {
