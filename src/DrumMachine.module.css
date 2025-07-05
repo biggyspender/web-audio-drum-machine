@@ -100,8 +100,8 @@
 
 .versionInfo {
   font-weight: 100;
-  span {
-    font-weight: 700;
+  a {
+    font-weight: normal;
   }
 
   font-size: 10px;
