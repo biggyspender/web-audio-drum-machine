@@ -9,6 +9,7 @@
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   background-color: #e6d8c5;
+  gap: 8px;
 }
 
 .title {
@@ -53,7 +54,7 @@
 }
 
 .buttonsContainer {
-  height:100%;
+  height: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -95,4 +96,15 @@
 /* When the sequence is playing, style the button differently */
 .playButton:has(+ :checked) {
   background-color: #cc0000;
+}
+
+.versionInfo {
+  font-weight: 100;
+  span {
+    font-weight: 700;
+  }
+
+  font-size: 10px;
+  color: black;
+  align-self: flex-end;
 }

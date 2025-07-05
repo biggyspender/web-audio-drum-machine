@@ -17,7 +17,6 @@
   );
   border-radius: 8px;
   border: 1px solid #2a2a2a;
-  margin-bottom: 20px;
   /* Plastic depth and shine effects */
   box-shadow: inset 2px 2px 6px rgba(255, 255, 255, 0.15),
     /* Toned down top highlight for plastic shine */ inset -2px -2px 6px

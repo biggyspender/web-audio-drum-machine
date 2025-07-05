@@ -16,7 +16,7 @@ import styles from "./DrumMachine.module.css";
 
 const sampleMapPromise = fetchSampleMap(defaultSamples);
 
-type PlaybackState = 'stopped' | 'playing' | 'paused';
+type PlaybackState = "stopped" | "playing" | "paused";
 
 export function DrumMachine() {
   const [bpm, setBpm] = useState<number>(90);
@@ -24,12 +24,14 @@ export function DrumMachine() {
   // const [humanizeVelocity, setHumanizeVelocity] = useState<number>(0.2);
   // const [humanizeTiming, setHumanizeTiming] = useState<number>(0.1);
   const [playheadPosition, setPlayheadPosition] = useState<number>(-1); // -1 means not playing, 0-15 for step position
-  const [playbackState, setPlaybackState] = useState<PlaybackState>('stopped');
+  const [playbackState, setPlaybackState] = useState<PlaybackState>("stopped");
   const [isAtStart, setIsAtStart] = useState<boolean>(true); // Track if we're at the beginning
   const { impulse, ...sampleMap } = use(sampleMapPromise);
 
   // Replace AbortController with persistent pipeline (using ref for stable reference)
-  const pipelineRef = useRef<ReturnType<typeof createPersistentAudioPipeline<keyof typeof sampleMap>> | null>(null);
+  const pipelineRef = useRef<ReturnType<
+    typeof createPersistentAudioPipeline<keyof typeof sampleMap>
+  > | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Initialize grid state directly since sampleMap is guaranteed by suspense
@@ -70,7 +72,7 @@ export function DrumMachine() {
   // Update pipeline with new sequence parameters in real-time
   useEffect(() => {
     const pipeline = pipelineRef.current;
-    if (pipeline && playbackState !== 'stopped') {
+    if (pipeline && playbackState !== "stopped") {
       pipeline.updateSequence(() => sequenceRef.current);
     }
   }, [sequence, playbackState]);
@@ -89,18 +91,20 @@ export function DrumMachine() {
   // Initialize pipeline on first user interaction (to comply with browser AudioContext policy)
   const initializePipeline = useCallback(async () => {
     if (pipelineRef.current) return; // Already initialized
-    
+
     if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext({ latencyHint: "interactive" });
+      audioContextRef.current = new AudioContext({
+        latencyHint: "interactive",
+      });
     }
-    
+
     const audioContext = audioContextRef.current;
-    
+
     // Resume AudioContext if suspended (browser requirement)
-    if (audioContext.state === 'suspended') {
+    if (audioContext.state === "suspended") {
       await audioContext.resume();
     }
-    
+
     // Create persistent pipeline using factory function
     pipelineRef.current = createPersistentAudioPipeline(
       audioContext,
@@ -108,23 +112,27 @@ export function DrumMachine() {
       impulse.buffer,
       audioContext.destination
     );
-    
+
     const pipeline = pipelineRef.current;
-    
+
     // Subscribe to state changes (following convention #3 - event-driven)
-    const unsubscribeState = pipeline.subscribe('playback-state-changed', ({ state }) => {
-      setPlaybackState(state);
-    });
-    
+    const unsubscribeState = pipeline.subscribe(
+      "playback-state-changed",
+      ({ state }) => {
+        setPlaybackState(state);
+      }
+    );
+
     // Subscribe to step updates for playhead
-    const unsubscribeStep = pipeline.subscribe('step-updated', (stepData) => {
+    const unsubscribeStep = pipeline.subscribe("step-updated", (stepData) => {
       // Calculate the current step in our 16-step grid
-      const currentStep = stepData.beatIndex * stepData.subdivisions + stepData.stepIndex;
+      const currentStep =
+        stepData.beatIndex * stepData.subdivisions + stepData.stepIndex;
       const position = currentStep % STEP_COUNT;
       setPlayheadPosition(position);
       setIsAtStart(position === 0);
     });
-    
+
     // Store unsubscribe functions for cleanup
     return { unsubscribeState, unsubscribeStep };
   }, [sampleMap, impulse.buffer]);
@@ -149,42 +157,45 @@ export function DrumMachine() {
   const startPlayback = useCallback(async () => {
     // Initialize pipeline on first play (user gesture required for AudioContext)
     await initializePipeline();
-    
+
     const pipeline = pipelineRef.current;
-    if (pipeline && (playbackState === 'stopped' || playbackState === 'paused')) {
+    if (
+      pipeline &&
+      (playbackState === "stopped" || playbackState === "paused")
+    ) {
       await pipeline.play(
         () => sequenceRef.current,
         handleStepUpdate // Keep existing callback for compatibility
       );
       // When starting from stopped, we're not necessarily at start anymore
-      if (playbackState === 'stopped') {
+      if (playbackState === "stopped") {
         setIsAtStart(false);
       }
     }
   }, [playbackState, handleStepUpdate, initializePipeline]);
-  
+
   // Reset to start functionality (back to beginning while maintaining playback state)
   const resetToStart = useCallback(async () => {
     const pipeline = pipelineRef.current;
-    if (pipeline && playbackState !== 'stopped') {
+    if (pipeline && playbackState !== "stopped") {
       await pipeline.resetToStart();
-      
+
       // Update UI state for reset to start
       setPlayheadPosition(0);
       setIsAtStart(true);
     }
   }, [playbackState]);
-  
+
   // Add pause functionality (not possible with old system)
   const pausePlayback = useCallback(async () => {
     const pipeline = pipelineRef.current;
-    if (pipeline && playbackState === 'playing') {
+    if (pipeline && playbackState === "playing") {
       await pipeline.pause();
     }
   }, [playbackState]);
 
   const togglePlayback = useCallback(() => {
-    if (playbackState === 'playing') {
+    if (playbackState === "playing") {
       pausePlayback(); // Now we can pause instead of stop
     } else {
       startPlayback();
@@ -217,13 +228,16 @@ export function DrumMachine() {
       <div className={styles.controlsContainer}>
         <div className={styles.buttonsContainer}>
           <PlayPauseButton
-            isPlaying={playbackState === 'playing'}
+            isPlaying={playbackState === "playing"}
             onClick={togglePlayback}
           />
-          
+
           {/* Reset to start button - always visible, active when playing or when paused/stopped but not at start */}
           <StopButton
-            isActive={playbackState === 'playing' || (playbackState !== 'stopped' && !isAtStart)}
+            isActive={
+              playbackState === "playing" ||
+              (playbackState !== "stopped" && !isAtStart)
+            }
             onClick={resetToStart}
           />
         </div>
@@ -273,6 +287,11 @@ export function DrumMachine() {
           /> */}
         </div>
       </div>
+      {import.meta.env.VITE_BUILD_ID && (
+        <div className={styles.versionInfo}>
+          version <span>{import.meta.env.VITE_BUILD_ID}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -283,13 +302,13 @@ function useKeyHandler(callback: (e: KeyboardEvent) => void) {
 
       // Check if an interactive element is currently focused
       const activeElement = document.activeElement;
-      
+
       // Safely check if an interactive element is focused
       if (!activeElement) {
         callback(e);
         return;
       }
-      
+
       const isInteractiveElement =
         activeElement instanceof HTMLInputElement ||
         activeElement instanceof HTMLTextAreaElement ||
