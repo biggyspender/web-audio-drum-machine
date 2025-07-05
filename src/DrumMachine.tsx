@@ -215,12 +215,7 @@ export function DrumMachine() {
   // Handle spacebar key press for toggling playback
   useKeyHandler(keyHandler);
 
-  const buildId = useMemo(() => {
-    const bid = import.meta.env.VITE_BUILD_ID;
-    const num = Number(bid);
-    if (isNaN(num)) return bid;
-    return num.toString(16);
-  }, []);
+  const buildId = import.meta.env.VITE_BUILD_ID;
 
   return (
     <div className={styles.appContainer}>

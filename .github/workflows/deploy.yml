@@ -30,9 +30,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build project
-        run: pnpm build
-        env:
-          VITE_BUILD_ID: ${{ github.run_id }}
+        run: VITE_BUILD_ID=$(git rev-parse --short HEAD) pnpm build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
