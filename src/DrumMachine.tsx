@@ -294,11 +294,13 @@ export function DrumMachine() {
           commit{" "}
           <a
             href={`https://github.com/biggyspender/web-audio-drum-machine/commit/${buildId}`}
+            target={"_blank"}
           >
             {buildId}
           </a>{" "}
           <a
             href={`https://github.com/biggyspender/web-audio-drum-machine`}
+            target={"_blank"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
