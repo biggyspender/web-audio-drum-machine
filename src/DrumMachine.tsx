@@ -215,6 +215,13 @@ export function DrumMachine() {
   // Handle spacebar key press for toggling playback
   useKeyHandler(keyHandler);
 
+  const buildId = useMemo(() => {
+    const bid = import.meta.env.VITE_BUILD_ID;
+    const num = Number(bid);
+    if (isNaN(num)) return bid;
+    return num.toString(16);
+  }, []);
+
   return (
     <div className={styles.appContainer}>
       {/* Step Sequencer Grid */}
@@ -287,9 +294,9 @@ export function DrumMachine() {
           /> */}
         </div>
       </div>
-      {import.meta.env.VITE_BUILD_ID && (
+      {buildId && (
         <div className={styles.versionInfo}>
-          version <span>{import.meta.env.VITE_BUILD_ID}</span>
+          version <span>{buildId}</span>
         </div>
       )}
     </div>
