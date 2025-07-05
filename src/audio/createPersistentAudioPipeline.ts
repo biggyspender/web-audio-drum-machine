@@ -95,8 +95,8 @@ export function createPersistentAudioPipeline<K extends string>(
     const impulse = await audioContext.decodeAudioData(reverbImpulse.slice(0));
     // Create persistent effects chain with safe fallback
     effectsChain = createOutputEffectsChain(audioContext, impulse);
-    effectsChain.echoLevel.value = 0.4;
-    effectsChain.echoFeedback.value = 0.4;
+    effectsChain.echoLevel.value = 0.2;
+    effectsChain.echoFeedback.value = 0.3;
     effectsChain.connect(destination);
 
     // Create persistent sequencer clock
@@ -124,7 +124,7 @@ export function createPersistentAudioPipeline<K extends string>(
       stepData;
     const sequenceData = currentSequence();
     const { notes, bpm, timeSignature } = sequenceData;
-    effectsChain.echoDelayTime.value = 60*3 / (bpm * timeSignature[1]);
+    effectsChain.echoDelayTime.value = (60 * 2) / (bpm * timeSignature[1]);
 
     // Reuse existing note playing logic from playSequence.ts
     const notesIndex =
