@@ -1,38 +1,28 @@
-import type { AudioEffectNodeBase } from "../AudioEffectNodeBase";
+import { createCompositeAudioGraph } from "../createCompositeAudioGraph";
 
-export type FeedbackNode = AudioEffectNodeBase & {
-  readonly delayTime: AudioParam;
-  readonly feedback: AudioParam;
-};
+export function createFeedbackNode(audioContext: AudioContext) {
+  return createCompositeAudioGraph<{
+    delayTime: AudioParam;
+    feedback: AudioParam;
+  }>(audioContext, {}, ({ source, destination }) => {
+    const delayNode = audioContext.createDelay();
+    const gainNode = audioContext.createGain();
 
-export function createFeedbackNode(audioContext: AudioContext): FeedbackNode {
-  const delayNode = audioContext.createDelay();
-  const gainNode = audioContext.createGain();
+    // Set default values
+    delayNode.delayTime.value = 0.3;
+    gainNode.gain.value = 0.4;
 
-  // Set default values
-  delayNode.delayTime.value = 0.3;
-  gainNode.gain.value = 0.4;
+    // Feedback loop: delay -> gain -> delay
+    delayNode.connect(gainNode);
+    gainNode.connect(delayNode);
 
-  // Feedback loop
-  delayNode.connect(gainNode);
-  gainNode.connect(delayNode);
+    // Wire up input/output
+    source.connect(delayNode);
+    delayNode.connect(destination);
 
-  return {
-    input: delayNode,
-    connect: (destination: AudioNode) => delayNode.connect(destination),
-    disconnect: (destinationNode?: AudioNode) => {
-      if (destinationNode) {
-        delayNode.disconnect(destinationNode);
-      } else {
-        delayNode.disconnect();
-      }
-    },
-    get delayTime() {
-      return delayNode.delayTime;
-    },
-
-    get feedback() {
-      return gainNode.gain;
-    },
-  };
+    return {
+      delayTime: delayNode.delayTime,
+      feedback: gainNode.gain,
+    };
+  });
 }

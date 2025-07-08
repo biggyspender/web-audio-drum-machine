@@ -1,52 +1,34 @@
-import type { AudioEffectNodeBase } from "../AudioEffectNodeBase";
-
-export type ReverbNode = AudioEffectNodeBase & {
-  readonly wet: AudioParam;
-  readonly dry: AudioParam;
-};
+import { createCompositeAudioGraph } from "../createCompositeAudioGraph";
 
 export function createReverbNode(
   audioContext: AudioContext,
   impulseBuffer: AudioBuffer
-): ReverbNode {
-  // Create nodes
-  const revNode = audioContext.createConvolver();
-  const inputNode = audioContext.createGain();
-  const outputNode = audioContext.createGain();
-  const dryNode = audioContext.createGain(); // For clean signal
-  const wetNode = audioContext.createGain(); // For reverb signal
+) {
+  return createCompositeAudioGraph<{ wet: AudioParam; dry: AudioParam }>(
+    audioContext,
+    {},
+    ({ source, destination }) => {
+      const revNode = audioContext.createConvolver();
+      const dryNode = audioContext.createGain();
+      const wetNode = audioContext.createGain();
 
-  revNode.buffer = impulseBuffer;
+      revNode.buffer = impulseBuffer;
+      wetNode.gain.value = 0.5;
+      dryNode.gain.value = 1;
 
-  // Set default values
-  wetNode.gain.value = 0.5;
-  dryNode.gain.value = 1;
+      // Input → dry → output
+      source.connect(dryNode);
+      dryNode.connect(destination);
 
-  // Connect the nodes
-  // Input → dry → output
-  inputNode.connect(dryNode);
-  dryNode.connect(outputNode);
+      // Input → reverb → wet → output
+      source.connect(revNode);
+      revNode.connect(wetNode);
+      wetNode.connect(destination);
 
-  // Input → reverb → wet → output
-  inputNode.connect(revNode);
-  revNode.connect(wetNode);
-  wetNode.connect(outputNode);
-
-  return {
-    input: inputNode,
-    connect: (destination: AudioNode) => outputNode.connect(destination),
-    disconnect: (destinationNode?: AudioNode) => {
-      if (destinationNode) {
-        outputNode.disconnect(destinationNode);
-      } else {
-        outputNode.disconnect();
-      }
-    },
-    get wet() {
-      return wetNode.gain;
-    },
-    get dry() {
-      return dryNode.gain;
-    },
-  };
+      return {
+        wet: wetNode.gain,
+        dry: dryNode.gain,
+      };
+    }
+  );
 }

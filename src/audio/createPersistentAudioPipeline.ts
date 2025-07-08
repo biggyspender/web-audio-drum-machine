@@ -1,7 +1,4 @@
-import {
-  createOutputEffectsChain,
-  type OutputEffectsChainNode,
-} from "./createOutputEffectsChain";
+import { createOutputEffectsChain } from "./createOutputEffectsChain";
 import { getSequencerClock } from "./getSequencerClock/getSequencerClock";
 import { sampleMapToAudioBufferMap } from "./sampleMapToAudioBufferMap";
 import { createSource } from "./createSource";
@@ -71,7 +68,7 @@ export function createPersistentAudioPipeline<K extends string>(
   destination: AudioDestinationNode = audioContext.destination
 ) {
   // Private state in closure (following convention #1)
-  let effectsChain: OutputEffectsChainNode | null = null;
+  let effectsChain: ReturnType<typeof createOutputEffectsChain> | null = null;
   let clock: SequencerClock | null = null;
   let clockStepListener: ((stepData: StepData) => void) | null = null; // Track our listener
   let audioBufferMap: Record<K, AudioBuffer> | null = null; // Persistent AudioBufferMap
