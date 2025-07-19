@@ -5,7 +5,8 @@ export function handle404Redirect() {
   // Get the full path, search, and hash (excluding the domain and web-root)
   const { pathname, search, hash } = window.location;
   // Remove the web-root prefix if present
-  const base = import.meta.env.BASE_URL;
+  // Remove trailing slashes from base
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
   let path = pathname;
   if (path.startsWith(base)) {
     path = path.slice(base.length);
