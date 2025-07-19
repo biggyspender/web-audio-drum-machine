@@ -19,6 +19,7 @@ import {
 
 import { useMediaQuery } from "./components/useMediaQuery";
 import styles from "./DrumMachine.module.css";
+import { debounce } from "./lib/rate-limiting/debounce";
 
 const sampleMapPromise = fetchSampleMap(defaultSamples);
 
@@ -42,29 +43,36 @@ export function DrumMachine() {
   // Initialize grid state directly since sampleMap is guaranteed by suspense
   const [gridState, setGridState] = useState<GridState<keyof typeof sampleMap>>(
     () => {
-      // Phase 3: Decode drum pattern from URL hash fragment on load
-      const patternPrefix = "#pattern=";
-      if (window.location.hash.startsWith(patternPrefix)) {
-        const encoded = window.location.hash.slice(patternPrefix.length);
-        const decoded = decodePatternFromBase64(encoded);
-        // Only accept if it's an object with the right keys
-        if (decoded && typeof decoded === "object") {
-          return decoded as GridState<keyof typeof sampleMap>;
-        }
+      const parsed = parsePatternHash();
+      if (parsed && parsed.grid && typeof parsed.grid === "object") {
+        return parsed.grid as GridState<keyof typeof sampleMap>;
       }
       return createDefaultGridPattern(sampleMap);
     }
   );
-
-  // Update URL hash fragment with base64-encoded pattern whenever gridState changes
+  // Set initial knob state from hash if present
   useEffect(() => {
-    const encoded = encodePatternToBase64(gridState);
-    const patternPrefix = "#pattern=";
-    if (window.location.hash !== patternPrefix + encoded) {
-      console.log("Updating URL hash with pattern", encoded);
-      window.location.hash = patternPrefix + encoded;
+    const parsed = parsePatternHash();
+    if (parsed) {
+      if (typeof parsed.bpm === "number") setBpm(parsed.bpm);
+      if (typeof parsed.swing === "number") setSwing(parsed.swing);
     }
-  }, [gridState]);
+  }, []);
+
+  const shareableState = useMemo(
+    () => ({
+      grid: gridState,
+      bpm,
+      swing,
+    }),
+    [gridState, bpm, swing]
+  );
+
+  // Update URL hash fragment with base64-encoded pattern+knobs whenever relevant state changes
+  useEffect(() => {
+    syncPatternWithUrlDebounced(shareableState);
+  }, [shareableState]);
+
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Step toggle handler for grid interaction
@@ -354,6 +362,19 @@ export function DrumMachine() {
     </div>
   );
 }
+function syncPatternWithUrl(shareableState: {
+  grid: GridState<"hat" | "clap" | "snare" | "kick">;
+  bpm: number;
+  swing: number;
+}) {
+  const encoded = encodePatternToBase64(shareableState);
+  const patternPrefix = "#pattern=";
+  if (window.location.hash !== patternPrefix + encoded) {
+    window.location.hash = patternPrefix + encoded;
+  }
+}
+const syncPatternWithUrlDebounced = debounce(syncPatternWithUrl, 300);
+
 function useKeyHandler(callback: (e: KeyboardEvent) => void) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -390,4 +411,31 @@ function useKeyHandler(callback: (e: KeyboardEvent) => void) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [callback]);
+}
+
+// Utility to parse pattern+knobs from hash fragment
+function parsePatternHash() {
+  const patternPrefix = "#pattern=";
+  if (window.location.hash.startsWith(patternPrefix)) {
+    const encoded = window.location.hash.slice(patternPrefix.length);
+    const decoded = decodePatternFromBase64(encoded);
+    if (
+      decoded &&
+      typeof decoded === "object" &&
+      "grid" in decoded &&
+      "bpm" in decoded &&
+      "swing" in decoded
+    ) {
+      return {
+        grid: decoded.grid,
+        bpm: decoded.bpm,
+        swing: decoded.swing,
+      };
+    }
+    // fallback for old format: just grid
+    if (decoded && typeof decoded === "object") {
+      return { grid: decoded };
+    }
+  }
+  return null;
 }
