@@ -5,16 +5,12 @@ import { DrumMachine } from "./DrumMachine";
 import { About } from "./About";
 
 export function App() {
+  // Remove trailing slash from base if present
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
   return (
-    <Router base="/web-audio-drum-machine">
-      <div>
-        <nav
-          style={{
-            padding: 16,
-            borderBottom: "1px solid #eee",
-            marginBottom: 24,
-          }}
-        >
+    <Router base={base}>
+      <div className={styles.main}>
+        <nav>
           <Link href="/">Drum Machine</Link> | <Link href="/about">About</Link>
         </nav>
         <Suspense fallback={<div className={styles.loading}>Loading</div>}>
