@@ -19,8 +19,13 @@ const localServerConfig = {
 // https://vite.dev/config/
 export default defineConfig({
   base: "/web-audio-drum-machine/",
+
   build: {
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        notFound: path.resolve(__dirname, "404.html"),
+      },
       treeshake: true,
       output: {
         assetFileNames: "assets/[hash][extname]",
