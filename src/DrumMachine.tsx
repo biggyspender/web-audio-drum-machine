@@ -12,7 +12,10 @@ import { createDefaultGridPattern } from "./components/sequencer/utils/createDef
 import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
 import { STEP_COUNT } from "./components/sequencer/types";
-import { encodePatternToBase64 } from "./components/sequencer/patternEncoding";
+import {
+  encodePatternToBase64,
+  decodePatternFromBase64,
+} from "./components/sequencer/patternEncoding";
 
 import { useMediaQuery } from "./components/useMediaQuery";
 import styles from "./DrumMachine.module.css";
@@ -38,7 +41,19 @@ export function DrumMachine() {
 
   // Initialize grid state directly since sampleMap is guaranteed by suspense
   const [gridState, setGridState] = useState<GridState<keyof typeof sampleMap>>(
-    () => createDefaultGridPattern(sampleMap)
+    () => {
+      // Phase 3: Decode drum pattern from URL hash fragment on load
+      const patternPrefix = "#pattern=";
+      if (window.location.hash.startsWith(patternPrefix)) {
+        const encoded = window.location.hash.slice(patternPrefix.length);
+        const decoded = decodePatternFromBase64(encoded);
+        // Only accept if it's an object with the right keys
+        if (decoded && typeof decoded === "object") {
+          return decoded as GridState<keyof typeof sampleMap>;
+        }
+      }
+      return createDefaultGridPattern(sampleMap);
+    }
   );
 
   // Update URL hash fragment with base64-encoded pattern whenever gridState changes
