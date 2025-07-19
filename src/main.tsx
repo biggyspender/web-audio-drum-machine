@@ -1,7 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-
 import { App } from "./App.tsx";
+import { patchAudioNodeConnect } from "./audio/patchAudioNodeConnect.ts";
+
+patchAudioNodeConnect();
 
 const rootElement = document.getElementById("root");
 if (rootElement) {

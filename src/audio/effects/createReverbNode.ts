@@ -4,7 +4,7 @@ export function createReverbNode(
   audioContext: AudioContext,
   impulseBuffer: AudioBuffer
 ) {
-  return createCompositeAudioGraph<{ wet: AudioParam; dry: AudioParam }>(
+  return createCompositeAudioGraph(
     audioContext,
     {},
     ({ source, destination }) => {
