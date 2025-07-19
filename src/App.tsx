@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { Link, Route, Switch, Router } from "wouter";
 import styles from "./App.module.css";
+
 import { DrumMachine } from "./DrumMachine";
 import { About } from "./About";
+import { NotFound } from "./NotFound";
 
 export function App() {
   // Remove trailing slash from base if present
@@ -17,6 +19,9 @@ export function App() {
           <Switch>
             <Route path="/" component={DrumMachine} />
             <Route path="/about" component={About} />
+            <Route>
+              <NotFound />
+            </Route>
           </Switch>
         </Suspense>
       </div>
