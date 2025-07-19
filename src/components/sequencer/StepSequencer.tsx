@@ -2,7 +2,7 @@ import type { SampleBuffer } from "../../audio/SampleBuffer";
 import type { GridState } from "./types";
 import { StepButton } from "./StepButton";
 import styles from "./StepSequencer.module.css";
-import React from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 
 interface StepSequencerProps<K extends string> {
   sampleMap: Record<K, SampleBuffer<K>>;
@@ -21,6 +21,51 @@ export function StepSequencer<K extends string>({
 }: StepSequencerProps<K>) {
   const trackKeys = Object.keys(sampleMap) as K[];
   const stepCount = gridState[trackKeys[0]]?.length || 0;
+
+  // Drag state for painting
+  const [dragging, setDragging] = useState(false);
+  const [dragValue, setDragValue] = useState<boolean | null>(null);
+  // To avoid repeated updates on the same button
+  const paintedRef = useRef<Set<string>>(new Set());
+
+  // End drag on mouseup anywhere
+  useEffect(() => {
+    if (!dragging) return;
+    const handleUp = () => {
+      setDragging(false);
+      setDragValue(null);
+      paintedRef.current.clear();
+    };
+    window.addEventListener("mouseup", handleUp);
+    return () => window.removeEventListener("mouseup", handleUp);
+  }, [dragging]);
+
+  // Handlers for step buttons
+  const handleStepMouseDown = useCallback(
+    (trackKey: K, stepIndex: number) => {
+      const current = !!gridState[trackKey][stepIndex];
+      const newValue = !current;
+      setDragging(true);
+      setDragValue(newValue);
+      paintedRef.current = new Set([`${trackKey}:${stepIndex}`]);
+      onStepToggle(trackKey, stepIndex);
+    },
+    [gridState, onStepToggle]
+  );
+
+  const handleStepMouseEnter = useCallback(
+    (trackKey: K, stepIndex: number) => {
+      if (!dragging || dragValue === null) return;
+      const key = `${trackKey}:${stepIndex}`;
+      if (paintedRef.current.has(key)) return;
+      // Only set if not already at dragValue
+      if (!!gridState[trackKey][stepIndex] !== dragValue) {
+        onStepToggle(trackKey, stepIndex);
+      }
+      paintedRef.current.add(key);
+    },
+    [dragging, dragValue, gridState, onStepToggle]
+  );
 
   // Render
   if (vertical) {
@@ -51,21 +96,20 @@ export function StepSequencer<K extends string>({
         ))}
         {/* Step buttons */}
         {Array.from({ length: stepCount }, (_, rowIdx) =>
-          verticalTrackKeys.map((_, colIdx) => (
-            <StepButton
-              key={`btn-${rowIdx}-${colIdx}`}
-              isActive={(() => {
-                const trackKey = verticalTrackKeys[colIdx];
-                return gridState[trackKey]?.[rowIdx];
-              })()}
-              onClick={() => {
-                const trackKey = verticalTrackKeys[colIdx];
-                onStepToggle(trackKey, rowIdx);
-              }}
-              backlightIntensity={playheadPosition === rowIdx ? 1.0 : 0.0}
-              style={{ gridColumn: colIdx + 2, gridRow: rowIdx + 2 }}
-            />
-          ))
+          verticalTrackKeys.map((_, colIdx) => {
+            const trackKey = verticalTrackKeys[colIdx];
+            return (
+              <StepButton
+                key={`btn-${rowIdx}-${colIdx}`}
+                isActive={gridState[trackKey]?.[rowIdx]}
+                onClick={() => onStepToggle(trackKey, rowIdx)}
+                onMouseDown={() => handleStepMouseDown(trackKey, rowIdx)}
+                onMouseEnter={() => handleStepMouseEnter(trackKey, rowIdx)}
+                backlightIntensity={playheadPosition === rowIdx ? 1.0 : 0.0}
+                style={{ gridColumn: colIdx + 2, gridRow: rowIdx + 2 }}
+              />
+            );
+          })
         )}
       </div>
     );
@@ -106,7 +150,9 @@ export function StepSequencer<K extends string>({
             <StepButton
               key={`${trackKey}-${stepIndex}`}
               isActive={gridState[trackKey][stepIndex]}
-              onClick={() => onStepToggle(trackKey, stepIndex)}
+              //onClick={() => onStepToggle(trackKey, stepIndex)}
+              onMouseDown={() => handleStepMouseDown(trackKey, stepIndex)}
+              onMouseEnter={() => handleStepMouseEnter(trackKey, stepIndex)}
               backlightIntensity={playheadPosition === stepIndex ? 1.0 : 0.0}
               style={{ gridColumn: stepIndex + 2, gridRow: trackIndex + 2 }}
             />

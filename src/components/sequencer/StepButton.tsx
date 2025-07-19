@@ -3,7 +3,9 @@ import styles from "./StepButton.module.css";
 
 interface StepButtonProps {
   isActive: boolean;
-  onClick: () => void;
+  onClick?: () => void;
+  onMouseDown?: () => void;
+  onMouseEnter?: () => void;
   backlightIntensity?: number; // 0-1, controls backlight intensity for playhead effect
   style?: React.CSSProperties; // Allow additional styles for grid positioning
 }
@@ -16,6 +18,8 @@ interface StepButtonCSSProps extends React.CSSProperties {
 export function StepButton({
   isActive,
   onClick,
+  onMouseDown,
+  onMouseEnter,
   backlightIntensity = 0,
   style,
 }: StepButtonProps) {
@@ -31,6 +35,8 @@ export function StepButton({
     <button
       className={`${styles.stepButton} ${isActive ? styles.active : ""}`}
       onClick={onClick}
+      onMouseDown={onMouseDown}
+      onMouseEnter={onMouseEnter}
       aria-label={`Step ${isActive ? "active" : "inactive"}`}
       type="button"
       style={cssProps}
