@@ -12,6 +12,8 @@ import { createDefaultGridPattern } from "./components/sequencer/utils/createDef
 import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
 import { STEP_COUNT } from "./components/sequencer/types";
+import { encodePatternToBase64 } from "./components/sequencer/patternEncoding";
+
 import { useMediaQuery } from "./components/useMediaQuery";
 import styles from "./DrumMachine.module.css";
 
@@ -33,12 +35,23 @@ export function DrumMachine() {
   const pipelineRef = useRef<ReturnType<
     typeof createPersistentAudioPipeline<keyof typeof sampleMap>
   > | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
 
   // Initialize grid state directly since sampleMap is guaranteed by suspense
   const [gridState, setGridState] = useState<GridState<keyof typeof sampleMap>>(
     () => createDefaultGridPattern(sampleMap)
   );
+
+  // Update URL hash fragment with base64-encoded pattern whenever gridState changes
+  useEffect(() => {
+    const encoded = encodePatternToBase64(gridState);
+    const patternPrefix = "#pattern=";
+    if (window.location.hash !== patternPrefix + encoded) {
+      console.log("Updating URL hash with pattern", encoded);
+      window.location.hash = patternPrefix + encoded;
+    }
+  }, [gridState]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
   // Step toggle handler for grid interaction
   const handleStepToggle = useCallback(
     (trackKey: keyof typeof sampleMap, stepIndex: number) => {
