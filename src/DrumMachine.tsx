@@ -1,4 +1,5 @@
 import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { createSequence } from "./audio/createSequence";
 import { createPersistentAudioPipeline } from "./audio/createPersistentAudioPipeline";
 import { fetchSampleMap } from "./audio/fetchSampleMap";
@@ -14,9 +15,12 @@ import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
 import { STEP_COUNT } from "./components/sequencer/types";
 import {
-  encodePatternToBase64,
   decodePatternFromBase64,
 } from "./components/sequencer/patternEncoding";
+import {
+  encodePatternToUrlSafe,
+  decodePatternFromUrlSafe,
+} from "./audio/urlSafeEncoding";
 
 import { useMediaQuery } from "./components/useMediaQuery";
 import styles from "./DrumMachine.module.css";
@@ -27,7 +31,12 @@ const sampleMapPromise = fetchSampleMap(defaultSamples);
 
 type PlaybackState = "stopped" | "playing" | "paused";
 
-export function DrumMachine() {
+interface DrumMachineProps {
+  initialPattern?: string;
+}
+
+export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
+  const [location, navigate] = useLocation();
   const [bpm, setBpm] = useState<number>(90);
   const [swing, setSwing] = useState<number>(0.55);
   const [echoLevel, setEchoLevel] = useState<number>(0.2);
@@ -44,9 +53,18 @@ export function DrumMachine() {
     ReturnType<typeof createPersistentAudioPipeline<keyof typeof sampleMap>>
   > | null>(null);
 
-  // Initialize grid state directly since sampleMap is guaranteed by suspense
+  // Initialize grid state with support for route parameter patterns
   const [gridState, setGridState] = useState<GridState<keyof typeof sampleMap>>(
     () => {
+      // First try initialPattern prop (URL-safe encoded)
+      if (initialPattern) {
+        const decoded = decodePatternFromUrlSafe(initialPattern);
+        if (decoded && decoded.grid && typeof decoded.grid === "object") {
+          return decoded.grid as GridState<keyof typeof sampleMap>;
+        }
+      }
+      
+      // Fallback to hash parsing (legacy format)
       const parsed = parsePatternHash();
       if (parsed && parsed.grid && typeof parsed.grid === "object") {
         return parsed.grid as GridState<keyof typeof sampleMap>;
@@ -69,9 +87,20 @@ export function DrumMachine() {
     // Optionally clear hash
     window.location.hash = "";
   }, [sampleMap]);
-  // Set initial knob state from hash if present
+  // Set initial knob state from route parameter or hash if present
   useEffect(() => {
-    const parsed = parsePatternHash();
+    let parsed = null;
+    
+    // First try initialPattern prop (URL-safe encoded)
+    if (initialPattern) {
+      parsed = decodePatternFromUrlSafe(initialPattern);
+    }
+    
+    // Fallback to hash parsing (legacy format)
+    if (!parsed) {
+      parsed = parsePatternHash();
+    }
+    
     if (parsed) {
       if (typeof parsed.bpm === "number") setBpm(parsed.bpm);
       if (typeof parsed.swing === "number") setSwing(parsed.swing);
@@ -79,7 +108,7 @@ export function DrumMachine() {
       if (typeof parsed.reverbLevel === "number")
         setReverbLevel(parsed.reverbLevel);
     }
-  }, []);
+  }, [initialPattern]);
 
   const shareableState = useMemo(
     () => ({
@@ -93,10 +122,33 @@ export function DrumMachine() {
     [gridState, bpm, swing, echoLevel, reverbLevel]
   );
 
-  // Update URL hash fragment with base64-encoded pattern+knobs whenever relevant state changes
+  // URL synchronization with history management
+  const syncPatternWithUrl = useCallback((shareableState: {
+    grid: GridState<"hat" | "clap" | "snare" | "kick">;
+    bpm: number;
+    swing: number;
+    echoLevel: number;
+    reverbLevel: number;
+    kit: string;
+  }) => {
+    const encoded = encodePatternToUrlSafe(shareableState);
+    const newPath = `/pattern/${encoded}`;
+    
+    // Only navigate if the current path is different
+    if (location !== newPath) {
+      navigate(newPath, { replace: false }); // Create history entry
+    }
+  }, [location, navigate]);
+
+  const syncPatternWithUrlDebounced = useMemo(
+    () => debounce(syncPatternWithUrl, 300),
+    [syncPatternWithUrl]
+  );
+
+  // Update URL with base64-encoded pattern+knobs whenever relevant state changes
   useEffect(() => {
     syncPatternWithUrlDebounced(shareableState);
-  }, [shareableState]);
+  }, [shareableState, syncPatternWithUrlDebounced]);
 
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -436,21 +488,6 @@ export function DrumMachine() {
     </div>
   );
 }
-function syncPatternWithUrl(shareableState: {
-  grid: GridState<"hat" | "clap" | "snare" | "kick">;
-  bpm: number;
-  swing: number;
-  echoLevel: number;
-  reverbLevel: number;
-  kit: string;
-}) {
-  const encoded = encodePatternToBase64(shareableState);
-  const patternPrefix = "#pattern=";
-  if (window.location.hash !== patternPrefix + encoded) {
-    window.location.hash = patternPrefix + encoded;
-  }
-}
-const syncPatternWithUrlDebounced = debounce(syncPatternWithUrl, 300);
 
 function useKeyHandler(callback: (e: KeyboardEvent) => void) {
   useEffect(() => {

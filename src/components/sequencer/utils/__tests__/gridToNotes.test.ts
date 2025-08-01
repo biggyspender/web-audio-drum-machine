@@ -12,9 +12,9 @@ describe('gridToNotes', () => {
 
   it('should convert empty grid to empty notes array', () => {
     const emptyGrid: GridState<'kick' | 'snare' | 'hat'> = {
-      kick: new Array(16).fill(false),
-      snare: new Array(16).fill(false),
-      hat: new Array(16).fill(false),
+      kick: new Array(16).fill(0),
+      snare: new Array(16).fill(0),
+      hat: new Array(16).fill(0),
     };
     
     const result = gridToNotes(emptyGrid, mockSampleMap);
@@ -27,9 +27,9 @@ describe('gridToNotes', () => {
 
   it('should convert single active step to notes', () => {
     const gridState: GridState<'kick' | 'snare' | 'hat'> = {
-      kick: [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-      snare: new Array(16).fill(false),
-      hat: new Array(16).fill(false),
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      snare: new Array(16).fill(0),
+      hat: new Array(16).fill(0),
     };
     
     const result = gridToNotes(gridState, mockSampleMap);
@@ -47,9 +47,9 @@ describe('gridToNotes', () => {
 
   it('should handle multiple samples on same step', () => {
     const gridState: GridState<'kick' | 'snare' | 'hat'> = {
-      kick: [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-      snare: [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-      hat: [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      snare: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      hat: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     };
     
     const result = gridToNotes(gridState, mockSampleMap);
@@ -65,9 +65,9 @@ describe('gridToNotes', () => {
 
   it('should use correct default velocities', () => {
     const gridState: GridState<'kick' | 'snare' | 'hat'> = {
-      kick: [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-      snare: [false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-      hat: [false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      snare: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      hat: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     };
     
     const result = gridToNotes(gridState, mockSampleMap);
@@ -84,7 +84,7 @@ describe('gridToNotes', () => {
     };
     
     const gridState: GridState<'custom'> = {
-      custom: [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      custom: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     };
     
     const result = gridToNotes(gridState, customSampleMap);
@@ -95,7 +95,7 @@ describe('gridToNotes', () => {
 
   it('should produce correct output format', () => {
     const gridState: GridState<'kick'> = {
-      kick: [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      kick: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     };
     
     const sampleMap: Record<'kick', SampleBuffer<'kick'>> = {

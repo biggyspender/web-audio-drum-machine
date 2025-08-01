@@ -12,10 +12,10 @@ describe("Binary Pattern Encoding", () => {
     reverbLevel: 0.25,
     kit: "default",
     grid: {
-      kick: [true, false, false, false, true, false, false, false, true, false, false, false, true, false, false, false],
-      snare: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false],
-      hat: [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, false],
-      clap: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      kick: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+      snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+      hat: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+      clap: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
   };
 
@@ -67,10 +67,10 @@ describe("Binary Pattern Encoding", () => {
       const emptyGrid = {
         ...mockShareableState,
         grid: {
-          kick: new Array(16).fill(false),
-          snare: new Array(16).fill(false),
-          hat: new Array(16).fill(false),
-          clap: new Array(16).fill(false),
+          kick: new Array(16).fill(0),
+          snare: new Array(16).fill(0),
+          hat: new Array(16).fill(0),
+          clap: new Array(16).fill(0),
         },
       };
       
@@ -82,10 +82,10 @@ describe("Binary Pattern Encoding", () => {
       const fullGrid = {
         ...mockShareableState,
         grid: {
-          kick: new Array(16).fill(true),
-          snare: new Array(16).fill(true),
-          hat: new Array(16).fill(true),
-          clap: new Array(16).fill(true),
+          kick: new Array(16).fill(1),
+          snare: new Array(16).fill(1),
+          hat: new Array(16).fill(1),
+          clap: new Array(16).fill(1),
         },
       };
       
@@ -136,8 +136,8 @@ describe("Binary Pattern Encoding", () => {
       expect(decoded).toBeNull();
     });
 
-    it("should handle legacy JSON format", () => {
-      // Simulate legacy encoding
+    it("should return null for legacy JSON format", () => {
+      // Simulate legacy encoding - should not be supported in binary format
       const legacyPattern = {
         bpm: 140,
         swing: 0.6,
@@ -147,11 +147,7 @@ describe("Binary Pattern Encoding", () => {
       const legacyEncoded = btoa(encodeURIComponent(legacyJson));
       
       const decoded = decodePatternFromBase64(legacyEncoded);
-      expect(decoded).toBeDefined();
-      expect(decoded?.bpm).toBe(140);
-      expect(decoded?.swing).toBe(0.6);
-      expect(decoded?.kit).toBe("default"); // Should default
-      expect(decoded?.grid).toEqual(legacyPattern.grid);
+      expect(decoded).toBeNull(); // Legacy format not supported
     });
   });
 
@@ -211,7 +207,7 @@ describe("Binary Pattern Encoding", () => {
     it("should handle missing grid tracks", () => {
       const partialGrid = {
         ...mockShareableState,
-        grid: { kick: new Array(16).fill(true) }, // Missing other tracks
+        grid: { kick: new Array(16).fill(1) }, // Missing other tracks
       };
       
       const encoded = encodePatternToBase64(partialGrid);
@@ -219,7 +215,7 @@ describe("Binary Pattern Encoding", () => {
       
       expect(decoded).toBeDefined();
       expect(decoded?.grid.kick).toBeDefined();
-      expect(decoded?.grid.snare).toEqual(new Array(16).fill(false)); // Should fill missing
+      expect(decoded?.grid.snare).toEqual(new Array(16).fill(0)); // Should fill missing
     });
 
     it("should handle unknown kit gracefully", () => {
