@@ -10,7 +10,6 @@ import { StepSequencer } from "./components/sequencer/StepSequencer";
 import { PlayPauseButton } from "./components/PlayPauseButton";
 import { BackToStartButton } from "./components/BackToStartButton";
 import { ResetPatternButton } from "./components/ResetPatternButton";
-import { createDefaultGridPattern } from "./components/sequencer/utils/createDefaultPattern";
 import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
 import { STEP_COUNT } from "./components/sequencer/types";
@@ -29,10 +28,10 @@ const sampleMapPromise = fetchSampleMap(defaultSamples);
 type PlaybackState = "stopped" | "playing" | "paused";
 
 interface DrumMachineProps {
-  initialPattern?: string;
+  initialPattern: string;
 }
 
-export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
+export function DrumMachine({ initialPattern }: DrumMachineProps) {
   const [location, navigate] = useLocation();
   const [bpm, setBpm] = useState<number>(90);
   const [swing, setSwing] = useState<number>(0.55);
@@ -64,7 +63,7 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
         }
       }
 
-      return createDefaultGridPattern(sampleMap);
+      return createEmptyGridPattern(sampleMap);
     }
   );
 
@@ -379,19 +378,21 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
       // Handle undo/redo shortcuts
       const ctrlKey = e.metaKey || e.ctrlKey;
 
-      console.log(`Key pressed: ${e.key}, Ctrl: ${ctrlKey}, Shift: ${e.shiftKey}`);
+      console.log(
+        `Key pressed: ${e.key}, Ctrl: ${ctrlKey}, Shift: ${e.shiftKey}`
+      );
 
       if (ctrlKey) {
         const key = e.key.toLowerCase();
         // Undo: Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
-        if (key === 'z' && !e.shiftKey) {
+        if (key === "z" && !e.shiftKey) {
           e.preventDefault();
           window.history.back();
           return;
         }
 
         // Redo: Ctrl+Y (Windows/Linux) or Cmd+Shift+Z (Mac)
-        if (key === 'y' || (key === 'z' && e.shiftKey)) {
+        if (key === "y" || (key === "z" && e.shiftKey)) {
           e.preventDefault();
           window.history.forward();
           return;

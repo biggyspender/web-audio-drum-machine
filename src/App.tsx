@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Link, Route, Switch, Router, useParams } from "wouter";
+import { Link, Route, Switch, Router, useParams, Redirect } from "wouter";
 import styles from "./App.module.css";
 
 import { DrumMachine } from "./DrumMachine";
@@ -9,12 +9,18 @@ import { NotFound } from "./NotFound";
 // Wrapper component to handle pattern route parameters
 function PatternRoute() {
   const params = useParams();
-  return <DrumMachine initialPattern={params.encodedPattern} />;
+  return params.encodedPattern ? (
+    <DrumMachine initialPattern={params.encodedPattern} />
+  ) : (
+    <Redirect to="/" />
+  );
 }
 
 // Wrapper component for the root route
 function RootRoute() {
-  return <DrumMachine />;
+  return (
+    <Redirect to="/pattern/HhoAKQdkZWZhdWx0BO9rLF4AAD1FACyAJAAAADwAAAAAfwAAAAAAAAB_AAAAU0y_ObVQq1l3sk3qUktOAAAAAAAAAAAAAAAAAAAATF4~" />
+  );
 }
 
 export function App() {
