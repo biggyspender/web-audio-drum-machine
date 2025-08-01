@@ -7,7 +7,7 @@ import type { StepData } from "./audio/getSequencerClock/types/StepData";
 import Knob from "./components/Knob";
 import { StepSequencer } from "./components/sequencer/StepSequencer";
 import { PlayPauseButton } from "./components/PlayPauseButton";
-import { StopButton } from "./components/StopButton";
+import { BackToStartButton } from "./components/BackToStartButton";
 import { createDefaultGridPattern } from "./components/sequencer/utils/createDefaultPattern";
 import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
@@ -309,7 +309,7 @@ export function DrumMachine() {
             />
 
             {/* Reset to start button - always visible, active when playing or when paused/stopped but not at start */}
-            <StopButton
+            <BackToStartButton
               isActive={
                 playbackState === "playing" ||
                 (playbackState !== "stopped" && !isAtStart)

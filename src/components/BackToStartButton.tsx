@@ -1,7 +1,7 @@
 import { StepButton } from "./sequencer/StepButton";
-import styles from "./StopButton.module.css";
+import styles from "./BackToStartButton.module.css";
 
-interface StopButtonProps {
+interface BackToStartButtonProps {
   isActive: boolean;
   onClick: () => void;
 }
@@ -17,7 +17,7 @@ const BackToStartIcon = () => (
   </svg>
 );
 
-export function StopButton({ isActive, onClick }: StopButtonProps) {
+export function BackToStartButton({ isActive, onClick }: BackToStartButtonProps) {
   return (
     <div className={styles.container}>
       <StepButton
