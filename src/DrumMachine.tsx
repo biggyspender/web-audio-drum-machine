@@ -15,9 +15,6 @@ import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
 import { STEP_COUNT } from "./components/sequencer/types";
 import {
-  decodePatternFromBase64,
-} from "./components/sequencer/patternEncoding";
-import {
   encodePatternToUrlSafe,
   decodePatternFromUrlSafe,
 } from "./audio/urlSafeEncoding";
@@ -48,6 +45,9 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
   const [isAtStart, setIsAtStart] = useState<boolean>(true); // Track if we're at the beginning
   const { impulse, ...sampleMap } = use(sampleMapPromise);
 
+  // Track if we're currently processing a navigation event to prevent URL sync conflicts
+  const isNavigatingRef = useRef(false);
+
   // Replace AbortController with persistent pipeline (using ref for stable reference)
   const pipelineRef = useRef<Awaited<
     ReturnType<typeof createPersistentAudioPipeline<keyof typeof sampleMap>>
@@ -63,12 +63,7 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
           return decoded.grid as GridState<keyof typeof sampleMap>;
         }
       }
-      
-      // Fallback to hash parsing (legacy format)
-      const parsed = parsePatternHash();
-      if (parsed && parsed.grid && typeof parsed.grid === "object") {
-        return parsed.grid as GridState<keyof typeof sampleMap>;
-      }
+
       return createDefaultGridPattern(sampleMap);
     }
   );
@@ -90,17 +85,12 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
   // Set initial knob state from route parameter or hash if present
   useEffect(() => {
     let parsed = null;
-    
+
     // First try initialPattern prop (URL-safe encoded)
     if (initialPattern) {
       parsed = decodePatternFromUrlSafe(initialPattern);
     }
-    
-    // Fallback to hash parsing (legacy format)
-    if (!parsed) {
-      parsed = parsePatternHash();
-    }
-    
+
     if (parsed) {
       if (typeof parsed.bpm === "number") setBpm(parsed.bpm);
       if (typeof parsed.swing === "number") setSwing(parsed.swing);
@@ -108,6 +98,35 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
       if (typeof parsed.reverbLevel === "number")
         setReverbLevel(parsed.reverbLevel);
     }
+  }, [initialPattern]);
+
+  // Handle browser navigation - update pattern state when initialPattern changes
+  useEffect(() => {
+    if (!initialPattern) return;
+
+    // Set navigation flag to prevent URL sync conflicts
+    isNavigatingRef.current = true;
+
+    const decoded = decodePatternFromUrlSafe(initialPattern);
+    if (decoded && decoded.grid && typeof decoded.grid === "object") {
+      // Update grid state from navigation
+      setGridState(decoded.grid as GridState<keyof typeof sampleMap>);
+
+      // Update other parameters too
+      if (typeof decoded.bpm === "number") setBpm(decoded.bpm);
+      if (typeof decoded.swing === "number") setSwing(decoded.swing);
+      if (typeof decoded.echoLevel === "number")
+        setEchoLevel(decoded.echoLevel);
+      if (typeof decoded.reverbLevel === "number")
+        setReverbLevel(decoded.reverbLevel);
+    }
+
+    // Clear navigation flag after a brief delay to allow state updates to settle
+    const timeoutId = setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [initialPattern]);
 
   const shareableState = useMemo(
@@ -123,22 +142,30 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
   );
 
   // URL synchronization with history management
-  const syncPatternWithUrl = useCallback((shareableState: {
-    grid: GridState<"hat" | "clap" | "snare" | "kick">;
-    bpm: number;
-    swing: number;
-    echoLevel: number;
-    reverbLevel: number;
-    kit: string;
-  }) => {
-    const encoded = encodePatternToUrlSafe(shareableState);
-    const newPath = `/pattern/${encoded}`;
-    
-    // Only navigate if the current path is different
-    if (location !== newPath) {
-      navigate(newPath, { replace: false }); // Create history entry
-    }
-  }, [location, navigate]);
+  const syncPatternWithUrl = useCallback(
+    (shareableState: {
+      grid: GridState<"hat" | "clap" | "snare" | "kick">;
+      bpm: number;
+      swing: number;
+      echoLevel: number;
+      reverbLevel: number;
+      kit: string;
+    }) => {
+      // Don't sync during navigation events to prevent conflicts
+      if (isNavigatingRef.current) {
+        return;
+      }
+
+      const encoded = encodePatternToUrlSafe(shareableState);
+      const newPath = `/pattern/${encoded}`;
+
+      // Only navigate if the current path is different
+      if (location !== newPath) {
+        navigate(newPath, { replace: false }); // Create history entry
+      }
+    },
+    [location, navigate]
+  );
 
   const syncPatternWithUrlDebounced = useMemo(
     () => debounce(syncPatternWithUrl, 300),
@@ -342,9 +369,33 @@ export function DrumMachine({ initialPattern }: DrumMachineProps = {}) {
 
   const keyHandler = useCallback(
     (e: KeyboardEvent): void => {
+      // Handle spacebar for play/pause
       if (e.code === "Space" || e.code === " ") {
         togglePlayback();
         e.preventDefault();
+        return;
+      }
+
+      // Handle undo/redo shortcuts
+      const ctrlKey = e.metaKey || e.ctrlKey;
+
+      console.log(`Key pressed: ${e.key}, Ctrl: ${ctrlKey}, Shift: ${e.shiftKey}`);
+
+      if (ctrlKey) {
+        const key = e.key.toLowerCase();
+        // Undo: Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
+        if (key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          window.history.back();
+          return;
+        }
+
+        // Redo: Ctrl+Y (Windows/Linux) or Cmd+Shift+Z (Mac)
+        if (key === 'y' || (key === 'z' && e.shiftKey)) {
+          e.preventDefault();
+          window.history.forward();
+          return;
+        }
       }
     },
     [togglePlayback]
@@ -525,34 +576,4 @@ function useKeyHandler(callback: (e: KeyboardEvent) => void) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [callback]);
-}
-
-// Utility to parse pattern+knobs from hash fragment
-function parsePatternHash() {
-  const patternPrefix = "#pattern=";
-  if (window.location.hash.startsWith(patternPrefix)) {
-    const encoded = window.location.hash.slice(patternPrefix.length);
-    const decoded = decodePatternFromBase64(encoded);
-    if (
-      decoded &&
-      typeof decoded === "object" &&
-      "grid" in decoded &&
-      "bpm" in decoded &&
-      "swing" in decoded
-    ) {
-      return {
-        grid: decoded.grid,
-        bpm: decoded.bpm,
-        swing: decoded.swing,
-        echoLevel: decoded.echoLevel,
-        reverbLevel: decoded.reverbLevel,
-        kit: decoded.kit || "default", // Handle both old and new formats
-      };
-    }
-    // fallback for old format: just grid
-    if (decoded && typeof decoded === "object") {
-      return { grid: decoded, kit: "default" };
-    }
-  }
-  return null;
 }
