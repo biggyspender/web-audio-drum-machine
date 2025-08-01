@@ -61,9 +61,9 @@ export function DrumMachine() {
 
   const shareableState = useMemo(
     () => ({
-      grid: gridState,
       bpm,
       swing,
+      grid: gridState,
     }),
     [gridState, bpm, swing]
   );
