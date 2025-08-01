@@ -63,6 +63,7 @@ export function DrumMachine() {
     () => ({
       bpm,
       swing,
+      kit: "default", // Default kit for now, will be configurable later
       grid: gridState,
     }),
     [gridState, bpm, swing]
@@ -366,6 +367,7 @@ function syncPatternWithUrl(shareableState: {
   grid: GridState<"hat" | "clap" | "snare" | "kick">;
   bpm: number;
   swing: number;
+  kit: string;
 }) {
   const encoded = encodePatternToBase64(shareableState);
   const patternPrefix = "#pattern=";
@@ -430,11 +432,12 @@ function parsePatternHash() {
         grid: decoded.grid,
         bpm: decoded.bpm,
         swing: decoded.swing,
+        kit: decoded.kit || "default", // Handle both old and new formats
       };
     }
     // fallback for old format: just grid
     if (decoded && typeof decoded === "object") {
-      return { grid: decoded };
+      return { grid: decoded, kit: "default" };
     }
   }
   return null;
