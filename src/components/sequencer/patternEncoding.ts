@@ -24,73 +24,52 @@ interface ShareableState {
  * @returns Base64-encoded binary string
  */
 export function encodePatternToBase64(pattern: ShareableState): string {
-  try {
-    // Validate and normalize inputs
-    const kitName = pattern.kit || "default";
-    const tracks = getKitTracks(kitName);
-    const numTracks = tracks.length;
-    
-    // Clamp values to valid ranges
-    const bpm = Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round(pattern.bpm)));
-    const swing = Math.max(MIN_SWING, Math.min(MAX_SWING, pattern.swing));
-    
-    // Encode kit name as UTF-8
-    const kitNameBytes = new TextEncoder().encode(kitName);
-    if (kitNameBytes.length > 255) {
-      throw new Error(`Kit name too long: ${kitNameBytes.length} bytes`);
-    }
-    
-    // Calculate buffer size - added 2 bytes for echo/reverb levels  
-    const bufferSize = 6 + kitNameBytes.length + (numTracks * STEP_COUNT);
-    const buffer = new ArrayBuffer(bufferSize);
-    const view = new DataView(buffer);
-    let offset = 0;
-    
-    // Encode BPM (0-120 maps to 60-180)
-    view.setUint8(offset++, bpm - MIN_BPM);
-    
-    // Encode swing (0-255 maps to 0.5-1.0)
-    view.setUint8(offset++, Math.round((swing - MIN_SWING) * 510));
-    
-    // Encode echo level (0-255 maps to 0.0-1.0)
-    view.setUint8(offset++, Math.round(pattern.echoLevel * 255));
-    
-    // Encode reverb level (0-255 maps to 0.0-1.0)  
-    view.setUint8(offset++, Math.round(pattern.reverbLevel * 255));
-    
-    // Encode kit name length
-    view.setUint8(offset++, kitNameBytes.length);
-    
-    // Encode kit name bytes
-    for (let i = 0; i < kitNameBytes.length; i++) {
-      view.setUint8(offset++, kitNameBytes[i]);
-    }
-    
-    // Encode number of tracks
-    view.setUint8(offset++, numTracks);
-    
-    // Encode grid data: 1 byte per step (0x00=off, 0x80=medium, 0xFF=full)
-    for (let trackIndex = 0; trackIndex < numTracks; trackIndex++) {
-      const trackName = tracks[trackIndex];
-      const track = pattern.grid[trackName] || new Array(STEP_COUNT).fill(0);
-      for (let step = 0; step < STEP_COUNT; step++) {
-        // Clamp to 0, 128, 255
-        let v = track[step] ?? 0;
-        if (v >= 192) v = 255;
-        else if (v >= 64) v = 128;
-        else v = 0;
-        view.setUint8(offset++, v);
-      }
-    }
-    
-    // Convert to base64
-    const bytes = new Uint8Array(buffer);
-    return btoa(String.fromCharCode(...bytes));
-  } catch (error) {
-    console.error("Pattern encoding failed:", error);
-    // Fallback to legacy JSON encoding for safety
-    return encodeLegacyPattern(pattern);
+  // Validate and normalize inputs
+  const kitName = pattern.kit || "default";
+  const tracks = getKitTracks(kitName);
+  const numTracks = tracks.length;
+  // Clamp values to valid ranges
+  const bpm = Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round(pattern.bpm)));
+  const swing = Math.max(MIN_SWING, Math.min(MAX_SWING, pattern.swing));
+  // Encode kit name as UTF-8
+  const kitNameBytes = new TextEncoder().encode(kitName);
+  if (kitNameBytes.length > 255) {
+    throw new Error(`Kit name too long: ${kitNameBytes.length} bytes`);
   }
+  // Calculate buffer size - added 2 bytes for echo/reverb levels  
+  const bufferSize = 6 + kitNameBytes.length + (numTracks * STEP_COUNT);
+  const buffer = new ArrayBuffer(bufferSize);
+  const view = new DataView(buffer);
+  let offset = 0;
+  // Encode BPM (0-120 maps to 60-180)
+  view.setUint8(offset++, bpm - MIN_BPM);
+  // Encode swing (0-255 maps to 0.5-1.0)
+  view.setUint8(offset++, Math.round((swing - MIN_SWING) * 510));
+  // Encode echo level (0-255 maps to 0.0-1.0)
+  view.setUint8(offset++, Math.round(pattern.echoLevel * 255));
+  // Encode reverb level (0-255 maps to 0.0-1.0)  
+  view.setUint8(offset++, Math.round(pattern.reverbLevel * 255));
+  // Encode kit name length
+  view.setUint8(offset++, kitNameBytes.length);
+  // Encode kit name bytes
+  for (let i = 0; i < kitNameBytes.length; i++) {
+    view.setUint8(offset++, kitNameBytes[i]);
+  }
+  // Encode number of tracks
+  view.setUint8(offset++, numTracks);
+  // Encode grid data: 1 byte per step (raw velocity 0-255)
+  for (let trackIndex = 0; trackIndex < numTracks; trackIndex++) {
+    const trackName = tracks[trackIndex];
+    const track = pattern.grid[trackName] || new Array(STEP_COUNT).fill(0);
+    for (let step = 0; step < STEP_COUNT; step++) {
+      let v = track[step] ?? 0;
+      v = Math.max(0, Math.min(255, Math.round(v)));
+      view.setUint8(offset++, v);
+    }
+  }
+  // Convert to base64
+  const bytes = new Uint8Array(buffer);
+  return btoa(String.fromCharCode(...bytes));
 }
 
 /**
@@ -99,19 +78,8 @@ export function encodePatternToBase64(pattern: ShareableState): string {
  * @returns Decoded pattern state or null if invalid
  */
 export function decodePatternFromBase64(encoded: string): ShareableState | null {
-  try {
-    // Try binary format first
-    const binaryResult = decodeBinaryPattern(encoded);
-    if (binaryResult) {
-      return binaryResult;
-    }
-    
-    // Fallback to legacy JSON format
-    return decodeLegacyPattern(encoded);
-  } catch (error) {
-    console.error("Pattern decoding failed:", error);
-    return null;
-  }
+  // Only support binary format
+  return decodeBinaryPattern(encoded);
 }
 
 /**
@@ -182,9 +150,7 @@ function decodeBinaryPattern(encoded: string): ShareableState | null {
       const track: number[] = [];
       for (let step = 0; step < STEP_COUNT; step++) {
         const value = view.getUint8(offset++);
-        if (value >= 192) track[step] = 255;
-        else if (value >= 64) track[step] = 128;
-        else track[step] = 0;
+        track[step] = value;
       }
       grid[trackName] = track;
     }
@@ -194,42 +160,3 @@ function decodeBinaryPattern(encoded: string): ShareableState | null {
   }
 }
 
-/**
- * Legacy JSON encoding (fallback)
- */
-function encodeLegacyPattern(pattern: unknown): string {
-  const json = JSON.stringify(pattern);
-  return btoa(encodeURIComponent(json));
-}
-
-/**
- * Legacy JSON decoding (fallback)
- */
-function decodeLegacyPattern(encoded: string): ShareableState | null {
-  try {
-    const json = decodeURIComponent(atob(encoded));
-    const parsed = JSON.parse(json);
-    
-    // Ensure we have the expected structure
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      "grid" in parsed &&
-      "bpm" in parsed &&
-      "swing" in parsed
-    ) {
-      return {
-        bpm: parsed.bpm,
-        swing: parsed.swing,
-        echoLevel: parsed.echoLevel || 0.2,
-        reverbLevel: parsed.reverbLevel || 0.25,
-        kit: parsed.kit || "default",
-        grid: parsed.grid,
-      };
-    }
-    
-    return null;
-  } catch {
-    return null;
-  }
-}
