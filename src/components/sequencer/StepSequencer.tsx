@@ -111,9 +111,11 @@ export function StepSequencer<K extends string>({
             const trackKey = verticalTrackKeys[colIdx];
             return (
               <StepButton
+                type="velocity-button"
                 key={`btn-${rowIdx}-${colIdx}`}
                 isActive={gridState[trackKey]?.[rowIdx] > 0}
                 velocity={gridState[trackKey]?.[rowIdx] ?? 0}
+                onVelocityChange={(velocity: number) => onStepToggle(trackKey, rowIdx, velocity)}
                 onMouseDown={() => handleStepMouseDown(trackKey, rowIdx)}
                 onMouseEnter={() => handleStepMouseEnter(trackKey, rowIdx)}
                 backlightIntensity={playheadPosition === rowIdx ? 1.0 : 0.0}
@@ -164,9 +166,11 @@ export function StepSequencer<K extends string>({
           {/* Step buttons for this track */}
           {Array.from({ length: stepCount }, (_, stepIndex) => (
             <StepButton
+              type="velocity-button"
               key={`${trackKey}-${stepIndex}`}
               isActive={gridState[trackKey][stepIndex] > 0}
               velocity={gridState[trackKey][stepIndex] ?? 0}
+              onVelocityChange={(velocity: number) => onStepToggle(trackKey, stepIndex, velocity)}
               onMouseDown={() => handleStepMouseDown(trackKey, stepIndex)}
               onMouseEnter={() => handleStepMouseEnter(trackKey, stepIndex)}
               backlightIntensity={playheadPosition === stepIndex ? 1.0 : 0.0}

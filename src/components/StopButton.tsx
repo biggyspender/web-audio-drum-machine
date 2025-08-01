@@ -21,6 +21,7 @@ export function StopButton({ isActive, onClick }: StopButtonProps) {
   return (
     <div className={styles.container}>
       <StepButton
+        type="button"
         isActive={isActive}
         onClick={onClick}
         backlightIntensity={isActive ? 1.0 : 0.0}

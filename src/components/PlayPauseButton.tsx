@@ -32,6 +32,7 @@ export function PlayPauseButton({ isPlaying, onClick }: PlayPauseButtonProps) {
   return (
     <div className={styles.container}>
       <StepButton
+        type="button"
         isActive={isPlaying}
         onClick={onClick}
         backlightIntensity={isPlaying ? 1.0 : 0.0}
