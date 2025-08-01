@@ -204,7 +204,7 @@ export function DrumMachine() {
 
     // Store unsubscribe functions for cleanup
     return { unsubscribeState, unsubscribeStep };
-  }, [sampleMap, impulse.buffer]);
+  }, [sampleMap, impulse.buffer, echoLevel, reverbLevel]);
 
   // Cleanup on unmount
   useEffect(() => {
