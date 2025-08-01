@@ -61,7 +61,7 @@ function createEventBus<EventMap>() {
  * Factory function that creates a persistent audio pipeline
  * Following project conventions: factory functions over classes (convention #1)
  */
-export function createPersistentAudioPipeline<K extends string>(
+export async function createPersistentAudioPipeline<K extends string>(
   audioContext: AudioContext,
   sampleMap: SampleMap<K>,
   reverbImpulse: ArrayBuffer,
@@ -102,7 +102,7 @@ export function createPersistentAudioPipeline<K extends string>(
 
     isInitialized = true;
   };
-
+  await ensureInitialized();
   /**
    * Play notes for a specific step (reuse existing logic)
    * Pure function - takes inputs, produces audio output, no mutation
@@ -205,8 +205,6 @@ export function createPersistentAudioPipeline<K extends string>(
       sequence: () => Sequence<K>,
       onStep?: (stepData: StepData) => void
     ): Promise<void> {
-      await ensureInitialized();
-
       // Stop current playback if running
       if (clock?.getProcessorState) {
         const state = await clock.getProcessorState();

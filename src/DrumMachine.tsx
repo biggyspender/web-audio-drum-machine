@@ -38,8 +38,8 @@ export function DrumMachine() {
   const { impulse, ...sampleMap } = use(sampleMapPromise);
 
   // Replace AbortController with persistent pipeline (using ref for stable reference)
-  const pipelineRef = useRef<ReturnType<
-    typeof createPersistentAudioPipeline<keyof typeof sampleMap>
+  const pipelineRef = useRef<Awaited<
+    ReturnType<typeof createPersistentAudioPipeline<keyof typeof sampleMap>>
   > | null>(null);
 
   // Initialize grid state directly since sampleMap is guaranteed by suspense
@@ -59,7 +59,8 @@ export function DrumMachine() {
       if (typeof parsed.bpm === "number") setBpm(parsed.bpm);
       if (typeof parsed.swing === "number") setSwing(parsed.swing);
       if (typeof parsed.echoLevel === "number") setEchoLevel(parsed.echoLevel);
-      if (typeof parsed.reverbLevel === "number") setReverbLevel(parsed.reverbLevel);
+      if (typeof parsed.reverbLevel === "number")
+        setReverbLevel(parsed.reverbLevel);
     }
   }, []);
 
@@ -85,7 +86,11 @@ export function DrumMachine() {
   // Step toggle handler for grid interaction
   // Accept velocity for per-hit velocity feature
   const handleStepToggle = useCallback(
-    (trackKey: keyof typeof sampleMap, stepIndex: number, velocity: number = 0) => {
+    (
+      trackKey: keyof typeof sampleMap,
+      stepIndex: number,
+      velocity: number = 0
+    ) => {
       setGridState((prevGrid) => ({
         ...prevGrid,
         [trackKey]: prevGrid[trackKey].map((val, index) =>
@@ -167,7 +172,7 @@ export function DrumMachine() {
     }
 
     // Create persistent pipeline using factory function
-    pipelineRef.current = createPersistentAudioPipeline(
+    pipelineRef.current = await createPersistentAudioPipeline(
       audioContext,
       sampleMap,
       impulse.buffer,
@@ -175,6 +180,9 @@ export function DrumMachine() {
     );
 
     const pipeline = pipelineRef.current;
+
+    pipeline.setEchoLevel(echoLevel);
+    pipeline.setReverbLevel(reverbLevel);
 
     // Subscribe to state changes (following convention #3 - event-driven)
     const unsubscribeState = pipeline.subscribe(
