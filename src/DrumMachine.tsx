@@ -8,6 +8,7 @@ import Knob from "./components/Knob";
 import { StepSequencer } from "./components/sequencer/StepSequencer";
 import { PlayPauseButton } from "./components/PlayPauseButton";
 import { BackToStartButton } from "./components/BackToStartButton";
+import { ResetPatternButton } from "./components/ResetPatternButton";
 import { createDefaultGridPattern } from "./components/sequencer/utils/createDefaultPattern";
 import { gridToNotes } from "./components/sequencer/utils/gridToNotes";
 import type { GridState } from "./components/sequencer/types";
@@ -20,6 +21,7 @@ import {
 import { useMediaQuery } from "./components/useMediaQuery";
 import styles from "./DrumMachine.module.css";
 import { debounce } from "./lib/rate-limiting/debounce";
+import { createEmptyGridPattern } from "./components/sequencer/utils/createEmptyGridPattern";
 
 const sampleMapPromise = fetchSampleMap(defaultSamples);
 
@@ -52,6 +54,21 @@ export function DrumMachine() {
       return createDefaultGridPattern(sampleMap);
     }
   );
+
+  // Handler to reset pattern and knobs to default
+  const handleResetPattern = useCallback(() => {
+    setGridState(createEmptyGridPattern(sampleMap));
+    setBpm(90);
+    setSwing(0.55);
+    setEchoLevel(0);
+    setReverbLevel(0);
+    setPlayheadPosition(-1);
+    setIsAtStart(true);
+    // Optionally reset playback state
+    setPlaybackState("stopped");
+    // Optionally clear hash
+    window.location.hash = "";
+  }, [sampleMap]);
   // Set initial knob state from hash if present
   useEffect(() => {
     const parsed = parsePatternHash();
@@ -316,6 +333,9 @@ export function DrumMachine() {
               }
               onClick={resetToStart}
             />
+
+            {/* Reset pattern button - always visible */}
+            <ResetPatternButton onClick={handleResetPattern} isActive={false} />
           </div>
 
           <div className={styles.knobsContainer}>
