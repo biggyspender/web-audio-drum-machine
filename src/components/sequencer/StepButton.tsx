@@ -3,6 +3,7 @@ import styles from "./StepButton.module.css";
 
 interface StepButtonProps {
   isActive: boolean;
+  velocity?: number; // 0-255, controls hit intensity
   onClick?: () => void;
   onMouseDown?: () => void;
   onMouseEnter?: () => void;
@@ -13,22 +14,29 @@ interface StepButtonProps {
 // Type-safe CSS custom properties
 interface StepButtonCSSProps extends React.CSSProperties {
   "--backlight-intensity"?: number;
+  "--velocity-intensity"?: number;
 }
 
-export function StepButton({
-  isActive,
-  onClick,
-  onMouseDown,
-  onMouseEnter,
-  backlightIntensity = 0,
-  style,
-}: StepButtonProps) {
+// ...existing code...
+export function StepButton(props: StepButtonProps) {
+  const {
+    isActive,
+    velocity = 0,
+    onClick,
+    onMouseDown,
+    onMouseEnter,
+    backlightIntensity = 0,
+    style,
+  } = props;
+  // Map velocity (0-255) to intensity (0-1)
+  const velocityIntensity = isActive ? Math.max(0, Math.min(velocity, 255)) / 255 : 0;
   const cssProps: StepButtonCSSProps = React.useMemo(
     () => ({
       "--backlight-intensity": backlightIntensity,
+      "--velocity-intensity": velocityIntensity,
       ...style, // Merge additional styles
     }),
-    [backlightIntensity, style]
+    [backlightIntensity, velocityIntensity, style]
   );
 
   return (

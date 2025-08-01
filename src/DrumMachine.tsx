@@ -83,12 +83,13 @@ export function DrumMachine() {
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Step toggle handler for grid interaction
+  // Accept velocity for per-hit velocity feature
   const handleStepToggle = useCallback(
-    (trackKey: keyof typeof sampleMap, stepIndex: number) => {
+    (trackKey: keyof typeof sampleMap, stepIndex: number, velocity: number = 0) => {
       setGridState((prevGrid) => ({
         ...prevGrid,
-        [trackKey]: prevGrid[trackKey].map((active, index) =>
-          index === stepIndex ? !active : active
+        [trackKey]: prevGrid[trackKey].map((val, index) =>
+          index === stepIndex ? velocity : val
         ),
       }));
     },

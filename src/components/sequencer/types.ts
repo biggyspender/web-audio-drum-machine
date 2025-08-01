@@ -1,5 +1,6 @@
 // Generic grid state type derived from sample map
-export type GridState<K extends string> = Record<K, boolean[]>;
+// Now stores velocity per hit (0 = off, 128/255 = on)
+export type GridState<K extends string> = Record<K, number[]>;
 
 // Default track velocities
 export const DEFAULT_TRACK_VELOCITIES: Record<string, number> = {

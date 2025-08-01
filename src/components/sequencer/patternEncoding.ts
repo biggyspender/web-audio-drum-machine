@@ -15,7 +15,7 @@ interface ShareableState {
   echoLevel: number;
   reverbLevel: number;
   kit: string;
-  grid: Record<string, boolean[]>;
+  grid: Record<string, number[]>; // velocity per step (0, 128, 255)
 }
 
 /**
@@ -69,13 +69,17 @@ export function encodePatternToBase64(pattern: ShareableState): string {
     // Encode number of tracks
     view.setUint8(offset++, numTracks);
     
-    // Encode grid data: 1 byte per step (0x00=false, 0xFF=true, future: 0x01-0xFE=velocity)
+    // Encode grid data: 1 byte per step (0x00=off, 0x80=medium, 0xFF=full)
     for (let trackIndex = 0; trackIndex < numTracks; trackIndex++) {
       const trackName = tracks[trackIndex];
-      const track = pattern.grid[trackName] || new Array(STEP_COUNT).fill(false);
-      
+      const track = pattern.grid[trackName] || new Array(STEP_COUNT).fill(0);
       for (let step = 0; step < STEP_COUNT; step++) {
-        view.setUint8(offset++, track[step] ? 0xFF : 0x00);
+        // Clamp to 0, 128, 255
+        let v = track[step] ?? 0;
+        if (v >= 192) v = 255;
+        else if (v >= 64) v = 128;
+        else v = 0;
+        view.setUint8(offset++, v);
       }
     }
     
@@ -172,19 +176,18 @@ function decodeBinaryPattern(encoded: string): ShareableState | null {
     }
     
     // Decode grid
-    const grid: Record<string, boolean[]> = {};
+    const grid: Record<string, number[]> = {};
     for (let trackIndex = 0; trackIndex < numTracks; trackIndex++) {
       const trackName = tracks[trackIndex];
-      const track: boolean[] = [];
-      
+      const track: number[] = [];
       for (let step = 0; step < STEP_COUNT; step++) {
         const value = view.getUint8(offset++);
-        track[step] = value === 0xFF; // 0xFF = true, 0x00 = false
+        if (value >= 192) track[step] = 255;
+        else if (value >= 64) track[step] = 128;
+        else track[step] = 0;
       }
-      
       grid[trackName] = track;
     }
-    
     return { bpm, swing, echoLevel, reverbLevel, kit: kitName, grid };
   } catch {
     return null;

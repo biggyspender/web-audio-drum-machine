@@ -11,7 +11,7 @@ export function createSource<K extends string>({
   source.buffer = audioBuffer;
   source.playbackRate.value = 1;
   const gainNode = audioContext.createGain();
-  gainNode.gain.value = playSample.velocity;
+  gainNode.gain.value = Math.max(0, Math.min(playSample.velocity / 255, 1));
   source.connect(gainNode);
   gainNode.connect(destination);
 
