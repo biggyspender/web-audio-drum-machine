@@ -78,8 +78,8 @@ export const InteractiveToggle: Story = {
     const handleStepToggle = (trackKey: TrackType, stepIndex: number) => {
       setGridState((prevGrid: GridState<TrackType>) => ({
         ...prevGrid,
-        [trackKey]: prevGrid[trackKey].map((active: boolean, index: number) =>
-          index === stepIndex ? !active : active
+        [trackKey]: prevGrid[trackKey].map((value: number, index: number) =>
+          index === stepIndex ? (value > 0 ? 0 : 1) : value
         ),
       }));
     };

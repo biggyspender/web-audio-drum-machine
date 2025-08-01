@@ -12,15 +12,15 @@ const mockSampleMap: Record<'kick' | 'snare' | 'hat', SampleBuffer<'kick' | 'sna
 };
 
 const emptyGridState: GridState<'kick' | 'snare' | 'hat'> = {
-  kick: new Array(16).fill(false),
-  snare: new Array(16).fill(false),
-  hat: new Array(16).fill(false),
+  kick: new Array(16).fill(0),
+  snare: new Array(16).fill(0),
+  hat: new Array(16).fill(0),
 };
 
 const samplePatternGridState: GridState<'kick' | 'snare' | 'hat'> = {
-  kick: [true, false, false, false, false, false, false, true, true, false, false, false, false, false, false, false],
-  snare: [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false],
-  hat: [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false],
+  kick: [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+  snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+  hat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
 };
 
 const meta = {

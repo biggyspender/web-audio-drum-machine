@@ -36,6 +36,7 @@ type Story = StoryObj<typeof meta>;
 // Default inactive state
 export const Inactive: Story = {
   args: {
+    type: "button",
     isActive: false,
     onClick: () => {},
   },
@@ -44,6 +45,7 @@ export const Inactive: Story = {
 // Active state with orange glow
 export const Active: Story = {
   args: {
+    type: "button",
     isActive: true,
     onClick: () => {},
   },
@@ -52,6 +54,7 @@ export const Active: Story = {
 // Size verification - multiple buttons to verify consistent sizing
 export const SizeVerification: Story = {
   args: {
+    type: "button",
     isActive: false,
     onClick: () => {},
   },
@@ -71,6 +74,7 @@ export const SizeVerification: Story = {
 // Backlight effect demonstration
 export const BacklightOff: Story = {
   args: {
+    type: "button",
     isActive: false,
     backlightIntensity: 0,
     onClick: () => {},
@@ -79,6 +83,7 @@ export const BacklightOff: Story = {
 
 export const BacklightLow: Story = {
   args: {
+    type: "button",
     isActive: false,
     backlightIntensity: 0.3,
     onClick: () => {},
@@ -87,6 +92,7 @@ export const BacklightLow: Story = {
 
 export const BacklightMedium: Story = {
   args: {
+    type: "button",
     isActive: false,
     backlightIntensity: 0.6,
     onClick: () => {},
@@ -95,6 +101,7 @@ export const BacklightMedium: Story = {
 
 export const BacklightFull: Story = {
   args: {
+    type: "button",
     isActive: false,
     backlightIntensity: 1.0,
     onClick: () => {},
@@ -104,6 +111,7 @@ export const BacklightFull: Story = {
 // Combined active state with backlight
 export const ActiveWithBacklight: Story = {
   args: {
+    type: "button",
     isActive: true,
     backlightIntensity: 1.0,
     onClick: () => {},
@@ -113,6 +121,7 @@ export const ActiveWithBacklight: Story = {
 // Backlight intensity comparison
 export const BacklightComparison: Story = {
   args: {
+    type: "button",
     isActive: false,
     onClick: () => {},
   },
@@ -154,6 +163,7 @@ export const BacklightComparison: Story = {
 // Interactive backlight toggle story
 export const InteractiveBacklight: Story = {
   args: {
+    type: "button",
     isActive: false,
     onClick: () => {},
   },
@@ -178,7 +188,8 @@ export const InteractiveBacklight: Story = {
         </div>
         
         <StepButton 
-          {...args} 
+          type="button"
+          isActive={args.isActive}
           backlightIntensity={backlightIntensity}
           onClick={toggleBacklight}
         />
