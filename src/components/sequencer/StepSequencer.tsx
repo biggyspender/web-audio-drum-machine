@@ -12,6 +12,8 @@ interface StepSequencerProps<K extends string> {
   vertical?: boolean; // Responsive layout mode
 }
 
+const VELOCITIES = [0, 255, 128];
+
 export function StepSequencer<K extends string>({
   sampleMap,
   gridState,
@@ -42,7 +44,6 @@ export function StepSequencer<K extends string>({
 
   // Handlers for step buttons
   // Cycle velocity: 0 -> 128 -> 255 -> 0 ...
-  const VELOCITIES = [0, 128, 255];
   const nextVelocity = (current: number) => {
     const idx = VELOCITIES.indexOf(current);
     return VELOCITIES[(idx + 1) % VELOCITIES.length];
@@ -81,7 +82,10 @@ export function StepSequencer<K extends string>({
     return (
       <div className={styles.sequencer} data-vertical>
         {/* Top row: instrument labels (truncated) */}
-        <div className={styles.cornerCell} style={{ gridColumn: 1, gridRow: 1 }}></div>
+        <div
+          className={styles.cornerCell}
+          style={{ gridColumn: 1, gridRow: 1 }}
+        ></div>
         {verticalTrackKeys.map((trackKey, i) => (
           <div
             key={`header-${i}`}
@@ -106,15 +110,15 @@ export function StepSequencer<K extends string>({
           verticalTrackKeys.map((_, colIdx) => {
             const trackKey = verticalTrackKeys[colIdx];
             return (
-                <StepButton
-                  key={`btn-${rowIdx}-${colIdx}`}
-                  isActive={gridState[trackKey]?.[rowIdx] > 0}
-                  velocity={gridState[trackKey]?.[rowIdx] ?? 0}
-                  onMouseDown={() => handleStepMouseDown(trackKey, rowIdx)}
-                  onMouseEnter={() => handleStepMouseEnter(trackKey, rowIdx)}
-                  backlightIntensity={playheadPosition === rowIdx ? 1.0 : 0.0}
-                  style={{ gridColumn: colIdx + 2, gridRow: rowIdx + 2 }}
-                />
+              <StepButton
+                key={`btn-${rowIdx}-${colIdx}`}
+                isActive={gridState[trackKey]?.[rowIdx] > 0}
+                velocity={gridState[trackKey]?.[rowIdx] ?? 0}
+                onMouseDown={() => handleStepMouseDown(trackKey, rowIdx)}
+                onMouseEnter={() => handleStepMouseEnter(trackKey, rowIdx)}
+                backlightIntensity={playheadPosition === rowIdx ? 1.0 : 0.0}
+                style={{ gridColumn: colIdx + 2, gridRow: rowIdx + 2 }}
+              />
             );
           })
         )}
@@ -126,17 +130,22 @@ export function StepSequencer<K extends string>({
   return (
     <div className={styles.sequencer}>
       {/* Header row - empty space for track labels column */}
-      <div className={styles.trackLabel} style={{ gridColumn: 1, gridRow: 1 }}></div>
+      <div
+        className={styles.trackLabel}
+        style={{ gridColumn: 1, gridRow: 1 }}
+      ></div>
       {/* Header row - step number headers */}
       {Array.from({ length: stepCount }, (_, i) => (
         <div
           key={`header-${i}`}
           className={styles.stepHeader}
-          style={{
-            gridColumn: i + 2,
-            gridRow: 1,
-            "--playhead-intensity": playheadPosition === i ? 1 : 0,
-          } as React.CSSProperties & { "--playhead-intensity": number }}
+          style={
+            {
+              gridColumn: i + 2,
+              gridRow: 1,
+              "--playhead-intensity": playheadPosition === i ? 1 : 0,
+            } as React.CSSProperties & { "--playhead-intensity": number }
+          }
         >
           {i + 1}
         </div>
