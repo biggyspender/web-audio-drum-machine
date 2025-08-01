@@ -12,6 +12,8 @@ const MAX_SWING = 1.0;
 interface ShareableState {
   bpm: number;
   swing: number;
+  echoLevel: number;
+  reverbLevel: number;
   kit: string;
   grid: Record<string, boolean[]>;
 }
@@ -38,8 +40,8 @@ export function encodePatternToBase64(pattern: ShareableState): string {
       throw new Error(`Kit name too long: ${kitNameBytes.length} bytes`);
     }
     
-    // Calculate buffer size
-    const bufferSize = 4 + kitNameBytes.length + (numTracks * STEP_COUNT);
+    // Calculate buffer size - added 2 bytes for echo/reverb levels  
+    const bufferSize = 6 + kitNameBytes.length + (numTracks * STEP_COUNT);
     const buffer = new ArrayBuffer(bufferSize);
     const view = new DataView(buffer);
     let offset = 0;
@@ -49,6 +51,12 @@ export function encodePatternToBase64(pattern: ShareableState): string {
     
     // Encode swing (0-255 maps to 0.5-1.0)
     view.setUint8(offset++, Math.round((swing - MIN_SWING) * 510));
+    
+    // Encode echo level (0-255 maps to 0.0-1.0)
+    view.setUint8(offset++, Math.round(pattern.echoLevel * 255));
+    
+    // Encode reverb level (0-255 maps to 0.0-1.0)  
+    view.setUint8(offset++, Math.round(pattern.reverbLevel * 255));
     
     // Encode kit name length
     view.setUint8(offset++, kitNameBytes.length);
@@ -129,6 +137,12 @@ function decodeBinaryPattern(encoded: string): ShareableState | null {
     // Decode swing
     const swing = (view.getUint8(offset++) / 510) + MIN_SWING;
     
+    // Decode echo level (0-255 maps to 0.0-1.0)  
+    const echoLevel = view.getUint8(offset++) / 255;
+    
+    // Decode reverb level (0-255 maps to 0.0-1.0)
+    const reverbLevel = view.getUint8(offset++) / 255;
+    
     // Decode kit name
     const kitNameLength = view.getUint8(offset++);
     if (offset + kitNameLength >= buffer.byteLength) {
@@ -171,7 +185,7 @@ function decodeBinaryPattern(encoded: string): ShareableState | null {
       grid[trackName] = track;
     }
     
-    return { bpm, swing, kit: kitName, grid };
+    return { bpm, swing, echoLevel, reverbLevel, kit: kitName, grid };
   } catch {
     return null;
   }
@@ -204,6 +218,8 @@ function decodeLegacyPattern(encoded: string): ShareableState | null {
       return {
         bpm: parsed.bpm,
         swing: parsed.swing,
+        echoLevel: parsed.echoLevel || 0.2,
+        reverbLevel: parsed.reverbLevel || 0.25,
         kit: parsed.kit || "default",
         grid: parsed.grid,
       };

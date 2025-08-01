@@ -28,6 +28,8 @@ type PlaybackState = "stopped" | "playing" | "paused";
 export function DrumMachine() {
   const [bpm, setBpm] = useState<number>(90);
   const [swing, setSwing] = useState<number>(0.55);
+  const [echoLevel, setEchoLevel] = useState<number>(0.2);
+  const [reverbLevel, setReverbLevel] = useState<number>(0.25);
   // const [humanizeVelocity, setHumanizeVelocity] = useState<number>(0.2);
   // const [humanizeTiming, setHumanizeTiming] = useState<number>(0.1);
   const [playheadPosition, setPlayheadPosition] = useState<number>(-1); // -1 means not playing, 0-15 for step position
@@ -56,6 +58,8 @@ export function DrumMachine() {
     if (parsed) {
       if (typeof parsed.bpm === "number") setBpm(parsed.bpm);
       if (typeof parsed.swing === "number") setSwing(parsed.swing);
+      if (typeof parsed.echoLevel === "number") setEchoLevel(parsed.echoLevel);
+      if (typeof parsed.reverbLevel === "number") setReverbLevel(parsed.reverbLevel);
     }
   }, []);
 
@@ -63,10 +67,12 @@ export function DrumMachine() {
     () => ({
       bpm,
       swing,
+      echoLevel,
+      reverbLevel,
       kit: "default", // Default kit for now, will be configurable later
       grid: gridState,
     }),
-    [gridState, bpm, swing]
+    [gridState, bpm, swing, echoLevel, reverbLevel]
   );
 
   // Update URL hash fragment with base64-encoded pattern+knobs whenever relevant state changes
@@ -114,6 +120,22 @@ export function DrumMachine() {
       pipeline.updateSequence(() => sequenceRef.current);
     }
   }, [sequence, playbackState]);
+
+  // Update echo level parameter in real-time
+  useEffect(() => {
+    const pipeline = pipelineRef.current;
+    if (pipeline) {
+      pipeline.setEchoLevel(echoLevel);
+    }
+  }, [echoLevel]);
+
+  // Update reverb level parameter in real-time
+  useEffect(() => {
+    const pipeline = pipelineRef.current;
+    if (pipeline) {
+      pipeline.setReverbLevel(reverbLevel);
+    }
+  }, [reverbLevel]);
 
   // Playhead tracking callback
   const handleStepUpdate = useCallback((stepData: StepData) => {
@@ -309,6 +331,28 @@ export function DrumMachine() {
               size={24}
             />
 
+            <Knob
+              min={0}
+              max={1}
+              value={echoLevel}
+              onChange={setEchoLevel}
+              label="Echo"
+              step={0.01}
+              precision={2}
+              size={24}
+            />
+
+            <Knob
+              min={0}
+              max={1}
+              value={reverbLevel}
+              onChange={setReverbLevel}
+              label="Reverb"
+              step={0.01}
+              precision={2}
+              size={24}
+            />
+
             {/* <Knob
             min={0}
             max={1}
@@ -367,6 +411,8 @@ function syncPatternWithUrl(shareableState: {
   grid: GridState<"hat" | "clap" | "snare" | "kick">;
   bpm: number;
   swing: number;
+  echoLevel: number;
+  reverbLevel: number;
   kit: string;
 }) {
   const encoded = encodePatternToBase64(shareableState);
@@ -432,6 +478,8 @@ function parsePatternHash() {
         grid: decoded.grid,
         bpm: decoded.bpm,
         swing: decoded.swing,
+        echoLevel: decoded.echoLevel,
+        reverbLevel: decoded.reverbLevel,
         kit: decoded.kit || "default", // Handle both old and new formats
       };
     }

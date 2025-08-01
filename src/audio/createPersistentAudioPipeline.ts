@@ -349,6 +349,24 @@ export function createPersistentAudioPipeline<K extends string>(
     },
 
     /**
+     * Set echo level parameter
+     */
+    setEchoLevel(value: number): void {
+      if (effectsChain) {
+        effectsChain.echoLevel.value = value;
+      }
+    },
+
+    /**
+     * Set reverb level parameter
+     */
+    setReverbLevel(value: number): void {
+      if (effectsChain) {
+        effectsChain.reverbLevel.value = value;
+      }
+    },
+
+    /**
      * Full cleanup (call when component unmounts)
      */
     dispose(): void {

@@ -8,6 +8,8 @@ describe("Binary Pattern Encoding", () => {
   const mockShareableState = {
     bpm: 120,
     swing: 0.55,
+    echoLevel: 0.2,
+    reverbLevel: 0.25,
     kit: "default",
     grid: {
       kick: [true, false, false, false, true, false, false, false, true, false, false, false, true, false, false, false],
