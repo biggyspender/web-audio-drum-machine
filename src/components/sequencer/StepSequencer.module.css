@@ -1,8 +1,8 @@
 /* StepSequencer - Single grid layout container with vintage plastic patina */
 .sequencer {
   display: grid;
-  /* Define grid: first column for labels, then 16 columns for steps */
-  grid-template-columns: min-content repeat(16, min-content);
+  /* Define grid: labels, send knobs, then 16 step columns */
+  grid-template-columns: min-content min-content repeat(16, min-content);
   gap: 4px;
   padding: 10px;
   /* Dark vintage plastic background with patina */
@@ -49,6 +49,13 @@
   justify-content: flex-end;
 }
 
+.trackSend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
 .stepHeader {
   font-size: 14px;
   font-weight: bold;
@@ -92,13 +99,13 @@
 
 /* Enhanced glow when playhead is active */
 /* Highlight every 4th step for musical visualization */
-.stepHeader:nth-child(4n + 2) {
+.stepHeader:nth-child(4n + 3) {
   font-weight: bold;
   /* Slightly brighter base color for quarter note positions */
   color: rgba(255, 220, 150, calc(0.6 + var(--playhead-intensity, 0) * 0.4));
 }
 
-.stepHeader:nth-child(4n + 2)::before {
+.stepHeader:nth-child(4n + 3)::before {
   /* Subtle base glow for quarter note positions when not activated */
   background: radial-gradient(
     circle at center,
@@ -112,7 +119,7 @@
 
 /* Responsive grid: horizontal (default) */
 .sequencer {
-  grid-template-columns: min-content repeat(16, 1fr);
+  grid-template-columns: min-content min-content repeat(16, 1fr);
   grid-auto-rows: 1fr;
   /* Prevent horizontal scroll */
   overflow-x: auto;
@@ -120,7 +127,7 @@
 
 /* Responsive grid: vertical mode */
 .sequencer[data-vertical] {
-  grid-template-columns: min-content repeat(var(--track-count, 4), 1fr);
+  grid-template-columns: min-content min-content repeat(var(--track-count, 4), 1fr);
   grid-auto-rows: 1fr;
 }
 

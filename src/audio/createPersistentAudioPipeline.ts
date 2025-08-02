@@ -1,4 +1,4 @@
-import { createOutputEffectsChain } from "./createOutputEffectsChain";
+import { createPerTrackEffectsRouter } from "./createPerTrackEffectsRouter";
 import { getSequencerClock } from "./getSequencerClock/getSequencerClock";
 import { sampleMapToAudioBufferMap } from "./sampleMapToAudioBufferMap";
 import { createSource } from "./createSource";
@@ -68,7 +68,7 @@ export async function createPersistentAudioPipeline<K extends string>(
   destination: AudioDestinationNode = audioContext.destination
 ) {
   // Private state in closure (following convention #1)
-  let effectsChain: ReturnType<typeof createOutputEffectsChain> | null = null;
+  let effectsChain: ReturnType<typeof createPerTrackEffectsRouter<K>> | null = null;
   let clock: SequencerClock | null = null;
   let clockStepListener: ((stepData: StepData) => void) | null = null; // Track our listener
   let audioBufferMap: Record<K, AudioBuffer> | null = null; // Persistent AudioBufferMap
@@ -90,11 +90,14 @@ export async function createPersistentAudioPipeline<K extends string>(
     // Create persistent AudioBufferMap once (major performance improvement)
     audioBufferMap = await sampleMapToAudioBufferMap(audioContext, sampleMap);
     const impulse = await audioContext.decodeAudioData(reverbImpulse.slice(0));
-    // Create persistent effects chain with safe fallback
-    effectsChain = createOutputEffectsChain(audioContext, impulse);
+    
+    // Get track keys for per-track routing
+    const trackKeys = Object.keys(sampleMap) as K[];
+    
+    // Create per-track effects routing system
+    effectsChain = createPerTrackEffectsRouter(audioContext, trackKeys, impulse, destination);
     effectsChain.echoLevel.value = 0.2;
     effectsChain.echoFeedback.value = 0.3;
-    effectsChain.connect(destination);
 
     // Create persistent sequencer clock
     clock = getSequencerClock(audioContext);
@@ -114,14 +117,14 @@ export async function createPersistentAudioPipeline<K extends string>(
     }
 
     // Now TypeScript knows these are non-null
-    const safeEffectsChain = effectsChain;
     const safeAudioBufferMap = audioBufferMap;
+    const safeEffectsChain = effectsChain;
 
     const { time, stepIndex, subdivisions, beatIndex, beatsPerBar, barIndex } =
       stepData;
     const sequenceData = currentSequence();
     const { notes, bpm, timeSignature } = sequenceData;
-    effectsChain.echoDelayTime.value = (60 * 2) / (bpm * timeSignature[1]);
+    safeEffectsChain.echoDelayTime.value = (60 * 2) / (bpm * timeSignature[1]);
 
     // Reuse existing note playing logic from playSequence.ts
     const notesIndex =
@@ -138,11 +141,20 @@ export async function createPersistentAudioPipeline<K extends string>(
       );
 
       notesToPlay.forEach((note) => {
+        // Get the track input for this sample
+        const trackKey = note.sample.id as K;
+        const trackInput = safeEffectsChain.trackInputs[trackKey];
+        
+        if (!trackInput) {
+          console.warn(`No track input found for sample: ${trackKey}`);
+          return;
+        }
+        
         const node = createSource({
           audioContext,
           audioBufferMap: safeAudioBufferMap,
           playSample: note,
-          destination: safeEffectsChain.input,
+          destination: trackInput,
         });
 
         const startTime = time + 0.03; // Standard audio scheduling offset
@@ -362,6 +374,29 @@ export async function createPersistentAudioPipeline<K extends string>(
       if (effectsChain) {
         effectsChain.reverbLevel.value = value;
       }
+    },
+
+    /**
+     * Set per-track effects send level
+     */
+    setTrackSend(trackKey: K, value: number): void {
+      if (effectsChain) {
+        const trackSend = effectsChain.trackSends[trackKey];
+        if (trackSend) {
+          trackSend.value = value;
+        }
+      }
+    },
+
+    /**
+     * Get per-track effects send level
+     */
+    getTrackSend(trackKey: K): number {
+      if (effectsChain) {
+        const trackSend = effectsChain.trackSends[trackKey];
+        return trackSend?.value ?? 0;
+      }
+      return 0;
     },
 
     /**

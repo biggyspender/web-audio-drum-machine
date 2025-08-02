@@ -37,12 +37,22 @@ export function DrumMachine({ initialPattern }: DrumMachineProps) {
   const [swing, setSwing] = useState<number>(0.55);
   const [echoLevel, setEchoLevel] = useState<number>(0.2);
   const [reverbLevel, setReverbLevel] = useState<number>(0.25);
+  
   // const [humanizeVelocity, setHumanizeVelocity] = useState<number>(0.2);
   // const [humanizeTiming, setHumanizeTiming] = useState<number>(0.1);
   const [playheadPosition, setPlayheadPosition] = useState<number>(-1); // -1 means not playing, 0-15 for step position
   const [playbackState, setPlaybackState] = useState<PlaybackState>("stopped");
   const [isAtStart, setIsAtStart] = useState<boolean>(true); // Track if we're at the beginning
   const { impulse, ...sampleMap } = use(sampleMapPromise);
+
+  // Per-track effects send levels (0-1) - Initialize after sampleMap is available
+  const [trackSends, setTrackSends] = useState<Record<keyof typeof sampleMap, number>>(() => {
+    const trackKeys = Object.keys(sampleMap) as (keyof typeof sampleMap)[];
+    return trackKeys.reduce((acc, key) => {
+      acc[key] = 0; // Default to 0% send (full dry)
+      return acc;
+    }, {} as Record<keyof typeof sampleMap, number>);
+  });
 
   // Track if we're currently processing a navigation event to prevent URL sync conflicts
   const isNavigatingRef = useRef(false);
@@ -238,6 +248,24 @@ export function DrumMachine({ initialPattern }: DrumMachineProps) {
     }
   }, [reverbLevel]);
 
+  // Update per-track send levels in real-time
+  useEffect(() => {
+    const pipeline = pipelineRef.current;
+    if (pipeline) {
+      Object.entries(trackSends).forEach(([trackKey, sendLevel]) => {
+        pipeline.setTrackSend(trackKey as keyof typeof sampleMap, sendLevel);
+      });
+    }
+  }, [trackSends]);
+
+  // Handler for updating individual track send levels
+  const setTrackSend = useCallback((trackKey: keyof typeof sampleMap, value: number) => {
+    setTrackSends(prev => ({
+      ...prev,
+      [trackKey]: value
+    }));
+  }, []);
+
   // Playhead tracking callback
   const handleStepUpdate = useCallback((stepData: StepData) => {
     // Calculate the current step in our 16-step grid
@@ -420,6 +448,8 @@ export function DrumMachine({ initialPattern }: DrumMachineProps) {
           onStepToggle={handleStepToggle}
           playheadPosition={playheadPosition}
           vertical={isVertical}
+          trackSends={trackSends}
+          onTrackSendChange={setTrackSend}
         />
 
         <div className={styles.controlsContainer}>
